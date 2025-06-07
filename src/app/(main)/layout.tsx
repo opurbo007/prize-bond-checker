@@ -10,7 +10,7 @@ export default async function DashboardLayout({
   const user = await getUserFromCookie();
   const name = user?.name || "User";
   return (
-    <div className="container mx-auto">
+    <div className="max-w-7xl mx-auto">
       <Navbar name={name} />
       {children}
     </div>

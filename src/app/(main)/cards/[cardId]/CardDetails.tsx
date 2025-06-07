@@ -391,37 +391,61 @@ export default function CardDetails({ cardId }: Props) {
                 }
                 placeholder="Bond Number"
               />
-              <Input
-                type="date"
-                value={editForm.purchaseDate}
-                onChange={(e) =>
-                  setEditForm((f) => ({ ...f, purchaseDate: e.target.value }))
-                }
-              />
-              <Select
-                value={editForm.status}
-                onValueChange={(value) =>
-                  setEditForm((f) => ({
-                    ...f,
-                    status: value as "hold" | "sell" | "win",
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hold">Hold</SelectItem>
-                  <SelectItem value="win">Win</SelectItem>
-                  <SelectItem value="sell">Sell</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex justify-center items-center space-x-5">
+                <Input
+                  type="date"
+                  value={editForm.purchaseDate}
+                  onChange={(e) =>
+                    setEditForm((f) => ({ ...f, purchaseDate: e.target.value }))
+                  }
+                />
+                <Select
+                  value={editForm.status}
+                  onValueChange={(value) =>
+                    setEditForm((f) => ({
+                      ...f,
+                      status: value as "hold" | "sell" | "win",
+                    }))
+                  }
+                >
+                  <SelectTrigger
+                    className={`w-full capitalize ${
+                      editForm.status === "hold"
+                        ? "text-green-700"
+                        : editForm.status === "win"
+                        ? "text-yellow-500"
+                        : editForm.status === "sell"
+                        ? "text-red-500"
+                        : ""
+                    }`}
+                  >
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem className="text-green-700" value="hold">
+                      Hold
+                    </SelectItem>
+                    <SelectItem className="text-yellow-500" value="win">
+                      Win
+                    </SelectItem>
+                    <SelectItem className="text-red-500" value="sell">
+                      Sell
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <DialogFooter className="mt-4">
-              <Button variant="outline" onClick={() => setEditBond(null)}>
+              <Button
+                disabled={isLoading}
+                variant="outline"
+                onClick={() => setEditBond(null)}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleUpdateBond}>Save</Button>
+              <Button disabled={isLoading} onClick={handleUpdateBond}>
+                Save
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

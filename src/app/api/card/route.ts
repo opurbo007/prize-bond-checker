@@ -23,7 +23,9 @@ export async function GET(req: NextRequest) {
       );
 
       return {
-        ...card,
+        _id: card._id,
+        name: card.name,
+        prizeBonds: card.prizeBonds,
         totalBond: heldBonds.length,
         totalWin: winBonds.length,
       };
