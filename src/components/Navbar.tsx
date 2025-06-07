@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 
-export default async function Navbar({ name }: { name?: string }) {
+export default function Navbar({ name }: { name?: string }) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -21,7 +21,7 @@ export default async function Navbar({ name }: { name?: string }) {
   }
 
   return (
-    <nav className="w-full flex items-center justify-between px-6 py-4 bg-white border-b border-black/20 shadow-sm">
+    <nav className="w-full flex items-center justify-between px-6 py-4 bg-white  ">
       <div className="flex items-center gap-4">
         <Avatar>
           <AvatarImage src="/placeholder-avatar.png" alt={name ?? "User"} />

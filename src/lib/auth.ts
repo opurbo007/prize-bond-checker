@@ -23,7 +23,7 @@ export async function getUserFromCookie(): Promise<UserPayload | null> {
     return {
       id: payload.userId as string,
       email: payload.email as string,
-      name: payload.name as string | undefined,
+      name: (payload.name as string) || "User",
     };
   } catch (error) {
     console.error("JWT verification failed:", error);
