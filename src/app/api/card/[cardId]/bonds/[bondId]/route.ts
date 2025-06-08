@@ -39,21 +39,24 @@ export async function DELETE(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { cardId: string; bondId: string } }
+  context: { params: { cardId: string; bondId: string } }
 ) {
   try {
     await connectDB();
-    const user = await getUserFromCookie();
-    if (!user)
-      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
+    const user = await getUserFromCookie();
+    if (!user) {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { cardId, bondId } = context.params;
     const { number, purchaseDate, status } = await req.json();
 
     const card = await Card.findOneAndUpdate(
       {
-        _id: params.cardId,
+        _id: cardId,
         userId: user.id,
-        "prizeBonds._id": params.bondId,
+        "prizeBonds._id": bondId,
       },
       {
         $set: {
@@ -65,12 +68,13 @@ export async function PUT(
       { new: true }
     );
 
-    if (!card)
+    if (!card) {
       return NextResponse.json({ message: "Bond not found" }, { status: 404 });
+    }
 
     return NextResponse.json({ message: "Bond updated", card });
   } catch (err) {
-    console.error("PUT /api/card/:cardId/bond/:bondId", err);
+    console.error("PUT /api/card/[cardId]/bonds/[bondId]", err);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
