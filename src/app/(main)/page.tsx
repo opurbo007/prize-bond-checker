@@ -208,10 +208,6 @@ export default function HomePage() {
     return <CardSkeletonGrid />;
   }
 
-  if (!hasCards) {
-    return <div>No cards found.</div>;
-  }
-
   return (
     <>
       {hasCards && (
