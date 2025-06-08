@@ -1,6 +1,6 @@
 import dynamic from "next/dynamic";
 
-const CardDetails = dynamic(() => import("./CardDetails"), { ssr: false });
+const CardDetails = dynamic(() => import("./CardDetails"));
 
 interface PageProps {
   params: {
