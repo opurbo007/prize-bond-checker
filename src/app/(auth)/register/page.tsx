@@ -9,8 +9,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { registerSchema } from "@/lib/validator";
-import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+
 import PasswordInput from "@/components/PasswordInput";
 import Link from "next/link";
 
@@ -18,7 +17,6 @@ type FormData = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -44,8 +42,9 @@ export default function RegisterPage() {
 
       toast.success("Registration successful!");
       router.push("/login");
-    } catch (err) {
+    } catch (_err) {
       toast.error("Something went wrong. Please try again.");
+      // console.error("Registration error:", err);
     }
   };
 

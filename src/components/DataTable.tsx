@@ -8,7 +8,6 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
-  Row,
 } from "@tanstack/react-table";
 import {
   Table,

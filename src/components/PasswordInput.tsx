@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 
+// @typescript-eslint/no-explicit-any
 interface PasswordInputProps {
   register: any;
   errors: any;

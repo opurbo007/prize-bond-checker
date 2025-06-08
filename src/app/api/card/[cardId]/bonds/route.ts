@@ -34,13 +34,14 @@ export async function POST(
       { new: true }
     );
 
-    // console.log("POST /api/card/[id]/bond - updatedCard:", updatedCard);
     if (!updatedCard) throw new ApiError(404, "Card not found");
     const cardWithCounts = {
       ...updatedCard.toObject(),
       totalBond: updatedCard.prizeBonds.filter(
+        // @typescript-eslint/no-explicit-any
         (b: any) => b.status !== "sell" && b.status !== "win"
       ).length,
+      // @typescript-eslint/no-explicit-any
       totalWin: updatedCard.prizeBonds.filter((b: any) => b.status === "win")
         .length,
     };
@@ -48,7 +49,7 @@ export async function POST(
       new ApiResponse(200, { card: cardWithCounts }, "Bond added")
     );
   } catch (error) {
-    // console.error("POST /api/card/[id]/bond error:", error);
+    console.error("Bond adding error:", error);
     return NextResponse.json(
       new ApiResponse(500, null, "Internal Server Error"),
       { status: 500 }
@@ -57,7 +58,7 @@ export async function POST(
 }
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: { cardId: string } }
 ) {
   try {
@@ -71,6 +72,7 @@ export async function GET(
 
     return NextResponse.json({ data: { card } });
   } catch (err) {
+    console.error("GET bond error:", err);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }

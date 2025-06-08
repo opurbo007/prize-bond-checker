@@ -64,8 +64,9 @@ export default function HomePage() {
 
       setCards(json.data.cards);
       setHasCards(json.data.cards.length > 0);
-    } catch (err) {
-      console.error("Failed to fetch cards", err);
+    } catch (_err) {
+      // console.error("Failed to fetch cards", err);
+      toast.error("Failed to fetch cards. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -136,7 +137,7 @@ export default function HomePage() {
     let data;
     try {
       data = await res.json();
-    } catch (err) {
+    } catch (_err) {
       // console.error("Failed to parse response:", err);
       toast.error("Failed to edit card");
       return;
@@ -341,7 +342,7 @@ export default function HomePage() {
             <CardHeader>
               <h2 className="text-2xl font-semibold">No Cards Yet</h2>
               <p className="text-muted-foreground text-sm mt-1">
-                You haven't created any bond cards yet.
+                You haven&apos;t created any bond cards yet.
               </p>
             </CardHeader>
             <CardContent>

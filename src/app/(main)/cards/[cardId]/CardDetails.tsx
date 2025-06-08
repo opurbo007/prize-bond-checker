@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -70,7 +69,7 @@ export default function CardDetails({ cardId }: Props) {
   const [bondInput, setBondInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchCardDetails = async () => {
+  const fetchCardDetails = useCallback(async () => {
     try {
       const res = await fetch(`/api/card/${cardId}/bonds`);
       const json = await res.json();
@@ -79,12 +78,13 @@ export default function CardDetails({ cardId }: Props) {
       } else {
         toast.error(json.message || "Failed to load card details");
       }
-    } catch (error) {
+    } catch (_error) {
       toast.error("Error loading card details");
+      // console.error("Error fetching card details:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [cardId]);
 
   const handleDeleteSelected = async () => {
     setIsLoading(true);
@@ -104,7 +104,7 @@ export default function CardDetails({ cardId }: Props) {
       });
       setSelectedBondIds(new Set());
       toast.success("Selected bonds deleted successfully!");
-    } catch (error) {
+    } catch (_error) {
       // console.error("Batch delete error:", error);
       toast.error("Failed to delete selected bonds. Please try again.");
     } finally {
@@ -138,9 +138,9 @@ export default function CardDetails({ cardId }: Props) {
       } else {
         toast.error(json.message || "Failed to update bond. Please try again.");
       }
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong.");
+    } catch (_err) {
+      // console.error(err);
+      toast.error("Error updating bond. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -187,7 +187,7 @@ export default function CardDetails({ cardId }: Props) {
 
       setBondInput("");
       toast.success("Bond added successfully!");
-    } catch (err) {
+    } catch (_err) {
       // console.error("Error adding bond:", err);
       toast.error("Error adding bond. Please try again.");
     } finally {
@@ -197,7 +197,7 @@ export default function CardDetails({ cardId }: Props) {
 
   useEffect(() => {
     fetchCardDetails();
-  }, [cardId]);
+  }, [fetchCardDetails]);
 
   const columns: ColumnDef<PrizeBond>[] = [
     {
@@ -224,9 +224,11 @@ export default function CardDetails({ cardId }: Props) {
           checked={selectedBondIds.has(row.original._id)}
           onCheckedChange={(checked) => {
             const copy = new Set(selectedBondIds);
-            checked
-              ? copy.add(row.original._id)
-              : copy.delete(row.original._id);
+            if (checked) {
+              copy.add(row.original._id);
+            } else {
+              copy.delete(row.original._id);
+            }
             setSelectedBondIds(copy);
           }}
         />

@@ -4,7 +4,7 @@ import { Card } from "@/models/card";
 import { getUserFromCookie } from "@/lib/auth";
 
 export async function DELETE(
-  req: Request,
+  _req: Request,
   { params }: { params: { cardId: string; bondId: string } }
 ) {
   await connectDB();
@@ -15,7 +15,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Card not found" }, { status: 404 });
     }
 
-    // Remove the bond from the array
+    //  @typescript-eslint/no-explicit-any
     card.prizeBonds = card.prizeBonds.filter(
       (bond: any) => bond._id.toString() !== params.bondId
     );
