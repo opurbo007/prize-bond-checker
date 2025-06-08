@@ -8,7 +8,7 @@ import { PrizeBond } from "@/lib/types";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { cardId: string } }
+  context: { params: { cardId: string } }
 ) {
   try {
     await connectDB();
@@ -16,7 +16,7 @@ export async function POST(
     const user = await getUserFromCookie();
     if (!user) throw new ApiError(401, "Unauthorized");
 
-    const cardId = params.cardId;
+    const { cardId } = context.params;
     const { number } = await req.json();
 
     if (!number) throw new ApiError(400, "Bond number is required");
@@ -36,28 +36,31 @@ export async function POST(
     );
 
     if (!updatedCard) throw new ApiError(404, "Card not found");
+
     const cardWithCounts = {
       ...updatedCard.toObject(),
       totalBond: updatedCard.prizeBonds.filter(
         (b: PrizeBond) => b.status !== "sell" && b.status !== "win"
       ).length,
-
       totalWin: updatedCard.prizeBonds.filter(
         (b: PrizeBond) => b.status === "win"
       ).length,
     };
+
     return NextResponse.json(
       new ApiResponse(200, { card: cardWithCounts }, "Bond added")
     );
   } catch (error) {
-    console.error("Bond adding error:", error);
-    return NextResponse.json(
-      new ApiResponse(500, null, "Internal Server Error"),
-      { status: 500 }
-    );
+    console.error("POST /api/card/[cardId]/bonds - error:", error);
+    const statusCode = error instanceof ApiError ? error.statusCode : 500;
+    const message =
+      error instanceof ApiError ? error.message : "Internal Server Error";
+
+    return NextResponse.json(new ApiResponse(statusCode, null, message), {
+      status: statusCode,
+    });
   }
 }
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(
   _: Request,

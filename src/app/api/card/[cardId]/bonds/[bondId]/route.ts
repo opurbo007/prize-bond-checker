@@ -6,23 +6,21 @@ import { PrizeBond } from "@/lib/types";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function DELETE(
-  _: NextRequest,
-  {
-    params,
-  }: {
-    params: { cardId: string; bondId: string };
-  }
+  _req: NextRequest,
+  context: { params: { cardId: string; bondId: string } }
 ) {
-  await connectDB();
-
   try {
-    const card = await Card.findById(params.cardId);
+    await connectDB();
+
+    const { cardId, bondId } = context.params;
+
+    const card = await Card.findById(cardId);
     if (!card) {
       return NextResponse.json({ message: "Card not found" }, { status: 404 });
     }
 
     card.prizeBonds = card.prizeBonds.filter(
-      (bond: PrizeBond) => bond._id.toString() !== params.bondId
+      (bond: any) => bond._id.toString() !== bondId
     );
 
     await card.save();
@@ -36,7 +34,6 @@ export async function DELETE(
     return NextResponse.json({ message: "Server error" }, { status: 500 });
   }
 }
-
 export async function PUT(
   req: NextRequest,
   context: { params: { cardId: string; bondId: string } }

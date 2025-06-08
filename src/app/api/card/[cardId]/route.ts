@@ -7,58 +7,73 @@ import { ApiResponse } from "@/lib/ApiResponse";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function DELETE(
-  _: NextRequest,
-  { params }: { params: { cardId: string } }
+  req: NextRequest,
+  context: { params: { cardId: string } }
 ) {
   try {
     await connectDB();
 
     const user = await getUserFromCookie();
-    if (!user) throw new ApiError(401, "Unauthorized");
+    if (!user) {
+      return NextResponse.json(new ApiResponse(401, null, "Unauthorized"), {
+        status: 401,
+      });
+    }
 
     const card = await Card.findOneAndDelete({
-      _id: params.cardId,
+      _id: context.params.cardId,
       userId: user.id,
     });
 
-    if (!card) throw new ApiError(404, "Card not found or unauthorized");
+    if (!card) {
+      return NextResponse.json(
+        new ApiResponse(404, null, "Card not found or unauthorized"),
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json(new ApiResponse(200, { message: "Card deleted" }));
   } catch (error) {
     console.error("DELETE /api/card/:cardId error:", error);
-    throw new ApiError(500, "Failed to delete card");
+    return NextResponse.json(
+      new ApiResponse(500, null, "Failed to delete card"),
+      { status: 500 }
+    );
   }
 }
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { cardId: string } }
+  context: { params: { cardId: string } }
 ) {
   try {
     await connectDB();
 
     const user = await getUserFromCookie();
-    if (!user)
+    if (!user) {
       return NextResponse.json(new ApiResponse(401, {}, "Unauthorized"), {
         status: 401,
       });
+    }
 
     const { name } = await req.json();
-    if (!name)
+    if (!name) {
       return NextResponse.json(new ApiResponse(400, {}, "Name is required"), {
         status: 400,
       });
+    }
 
     const updated = await Card.findOneAndUpdate(
-      { _id: params.cardId, userId: user.id },
+      { _id: context.params.cardId, userId: user.id },
       { name },
       { new: true }
     );
 
-    if (!updated)
+    if (!updated) {
       return NextResponse.json(new ApiResponse(404, {}, "Card not found"), {
         status: 404,
       });
+    }
 
     return NextResponse.json(
       new ApiResponse(200, { card: updated }, "Card updated")
