@@ -73,8 +73,8 @@ export default function HomePage() {
   };
 
   const handleCreate = async (close: () => void) => {
-    if (!cardName.trim()) return alert("Please enter a card name.");
-
+    if (!cardName.trim()) return toast("Please enter a card name.");
+    setIsLoading(true);
     try {
       const res = await fetch("/api/card", {
         method: "POST",
@@ -97,6 +97,8 @@ export default function HomePage() {
       }
     } catch (error) {
       console.error("Error creating card", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -344,7 +346,10 @@ export default function HomePage() {
             <CardContent>
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="w-full flex gap-2 justify-center">
+                  <Button
+                    disabled={isLoading}
+                    className="w-full flex gap-2 justify-center"
+                  >
                     <PlusCircle className="w-5 h-5" />
                     Create Your First Card
                   </Button>
