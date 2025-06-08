@@ -7,11 +7,11 @@ import { ApiResponse } from "@/lib/ApiResponse";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function DELETE(
   _req: NextRequest,
-  context: { params: { cardId: string } }
+  context: { params: Promise<{ cardId: string }> }
 ) {
   try {
     await connectDB();
-
+    const { cardId } = await context.params;
     const user = await getUserFromCookie();
     if (!user) {
       return NextResponse.json(new ApiResponse(401, null, "Unauthorized"), {
@@ -20,7 +20,7 @@ export async function DELETE(
     }
 
     const card = await Card.findOneAndDelete({
-      _id: context.params.cardId,
+      _id: cardId,
       userId: user.id,
     });
 
@@ -43,11 +43,11 @@ export async function DELETE(
 
 export async function PATCH(
   req: NextRequest,
-  context: { params: { cardId: string } }
+  context: { params: Promise<{ cardId: string }> }
 ) {
   try {
     await connectDB();
-
+    const { cardId } = await context.params;
     const user = await getUserFromCookie();
     if (!user) {
       return NextResponse.json(new ApiResponse(401, {}, "Unauthorized"), {
@@ -63,7 +63,7 @@ export async function PATCH(
     }
 
     const updated = await Card.findOneAndUpdate(
-      { _id: context.params.cardId, userId: user.id },
+      { _id: cardId, userId: user.id },
       { name },
       { new: true }
     );

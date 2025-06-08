@@ -8,7 +8,7 @@ import { PrizeBond } from "@/lib/types";
 
 export async function POST(
   req: NextRequest,
-  context: { params: { cardId: string } }
+  context: { params: Promise<{ cardId: string }> }
 ) {
   try {
     await connectDB();
@@ -16,7 +16,7 @@ export async function POST(
     const user = await getUserFromCookie();
     if (!user) throw new ApiError(401, "Unauthorized");
 
-    const { cardId } = context.params;
+    const { cardId } = await context.params;
     const { number } = await req.json();
 
     if (!number) throw new ApiError(400, "Bond number is required");
@@ -65,13 +65,14 @@ export async function POST(
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { cardId: string } }
+  context: { params: Promise<{ cardId: string }> }
 ) {
   try {
     await connectDB();
 
-    const cardId = params.cardId;
-    console.log("GET /api/card/[id]/bonds - cardId:", cardId);
+    const cardId = await context.params;
+
+    // console.log("GET /api/card/[id]/bonds - cardId:", cardId);
 
     const card = await Card.findById(cardId).select("name prizeBonds");
 
