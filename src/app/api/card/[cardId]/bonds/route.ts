@@ -4,12 +4,8 @@ import { getUserFromCookie } from "@/lib/auth";
 import { Card } from "@/models/card";
 import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
+import { PrizeBond } from "@/lib/types";
 
-type PrizeBond = {
-  number: string;
-  purchaseDate: Date;
-  status: "hold" | "win" | "sell";
-};
 
 export async function POST(
   req: NextRequest,

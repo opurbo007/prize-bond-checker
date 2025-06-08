@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Card } from "@/models/card";
 import { getUserFromCookie } from "@/lib/auth";
+import { PrizeBond } from "@/lib/types";
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: { cardId: string; bondId: string } }
-) {
+export async function DELETE({
+  params,
+}: {
+  params: { cardId: string; bondId: string };
+}) {
   await connectDB();
 
   try {
@@ -15,9 +17,8 @@ export async function DELETE(
       return NextResponse.json({ message: "Card not found" }, { status: 404 });
     }
 
-    //  @typescript-eslint/no-explicit-any
     card.prizeBonds = card.prizeBonds.filter(
-      (bond: any) => bond._id.toString() !== params.bondId
+      (bond: PrizeBond) => bond._id.toString() !== params.bondId
     );
 
     await card.save();

@@ -4,8 +4,9 @@ import { Card } from "@/models/card";
 import { getUserFromCookie } from "@/lib/auth";
 import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
+import { PrizeBond } from "@/lib/types";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     await connectDB();
 
@@ -15,13 +16,12 @@ export async function GET(_req: NextRequest) {
     const cards = await Card.find({ userId: user.id }).lean();
 
     const cardsWithStats = cards.map((card) => {
-      // @typescript-eslint/no-explicit-any
       const heldBonds = card.prizeBonds.filter(
-        (bond: any) => bond.status === "hold"
+        (bond: PrizeBond) => bond.status === "hold"
       );
-      // @typescript-eslint/no-explicit-any
+
       const winBonds = card.prizeBonds.filter(
-        (bond: any) => bond.status === "win"
+        (bond: PrizeBond) => bond.status === "win"
       );
 
       return {
