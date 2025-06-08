@@ -7,12 +7,12 @@ import { PrizeBond } from "@/lib/types";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function DELETE(
   _req: NextRequest,
-  context: { params: { cardId: string; bondId: string } }
+  context: { params: Promise<{ cardId: string; bondId: string }> }
 ) {
   try {
     await connectDB();
 
-    const { cardId, bondId } = context.params;
+    const { cardId, bondId } = await context.params;
 
     const card = await Card.findById(cardId);
     if (!card) {
@@ -36,7 +36,7 @@ export async function DELETE(
 }
 export async function PUT(
   req: NextRequest,
-  context: { params: { cardId: string; bondId: string } }
+  context: { params: Promise<{ cardId: string; bondId: string }> }
 ) {
   try {
     await connectDB();
@@ -46,7 +46,7 @@ export async function PUT(
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { cardId, bondId } = context.params;
+    const { cardId, bondId } = await context.params;
     const { number, purchaseDate, status } = await req.json();
 
     const card = await Card.findOneAndUpdate(
