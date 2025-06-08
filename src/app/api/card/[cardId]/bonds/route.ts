@@ -61,9 +61,10 @@ export async function POST(
     });
   }
 }
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(
-  _: Request,
+  _req: NextRequest,
   { params }: { params: { cardId: string } }
 ) {
   try {

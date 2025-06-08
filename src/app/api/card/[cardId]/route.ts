@@ -2,12 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Card } from "@/models/card";
 import { getUserFromCookie } from "@/lib/auth";
-import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   context: { params: { cardId: string } }
 ) {
   try {

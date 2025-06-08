@@ -20,7 +20,7 @@ export async function DELETE(
     }
 
     card.prizeBonds = card.prizeBonds.filter(
-      (bond: any) => bond._id.toString() !== bondId
+      (bond: PrizeBond) => bond._id.toString() !== bondId
     );
 
     await card.save();
