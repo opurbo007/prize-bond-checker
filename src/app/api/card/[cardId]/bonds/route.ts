@@ -5,6 +5,12 @@ import { Card } from "@/models/card";
 import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
 
+type PrizeBond = {
+  number: string;
+  purchaseDate: Date;
+  status: "hold" | "win" | "sell";
+};
+
 export async function POST(
   req: NextRequest,
   { params }: { params: { cardId: string } }
@@ -38,12 +44,12 @@ export async function POST(
     const cardWithCounts = {
       ...updatedCard.toObject(),
       totalBond: updatedCard.prizeBonds.filter(
-        // @typescript-eslint/no-explicit-any
-        (b: any) => b.status !== "sell" && b.status !== "win"
+        (b: PrizeBond) => b.status !== "sell" && b.status !== "win"
       ).length,
-      // @typescript-eslint/no-explicit-any
-      totalWin: updatedCard.prizeBonds.filter((b: any) => b.status === "win")
-        .length,
+
+      totalWin: updatedCard.prizeBonds.filter(
+        (b: PrizeBond) => b.status === "win"
+      ).length,
     };
     return NextResponse.json(
       new ApiResponse(200, { card: cardWithCounts }, "Bond added")
@@ -57,10 +63,7 @@ export async function POST(
   }
 }
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: { cardId: string } }
-) {
+export async function GET({ params }: { params: { cardId: string } }) {
   try {
     await connectDB();
     const card = await Card.findById(params.cardId).select("name prizeBonds");

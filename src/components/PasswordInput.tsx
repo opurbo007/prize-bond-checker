@@ -3,17 +3,17 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
+import { FieldErrors, Path, UseFormRegister } from "react-hook-form";
 
-// @typescript-eslint/no-explicit-any
-interface PasswordInputProps {
-  register: any;
-  errors: any;
-}
+type PasswordInputProps<T extends { password: string }> = {
+  register: UseFormRegister<T>;
+  errors: FieldErrors<T>;
+};
 
-export default function PasswordInput({
+export default function PasswordInput<T extends { password: string }>({
   register,
   errors,
-}: PasswordInputProps) {
+}: PasswordInputProps<T>) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
@@ -22,9 +22,10 @@ export default function PasswordInput({
         <Input
           type={showPassword ? "text" : "password"}
           placeholder="Password"
-          {...register("password")}
+          {...register("password" as Path<T>)}
           className="pr-10"
         />
+
         <button
           type="button"
           onClick={() => setShowPassword((prev) => !prev)}
@@ -35,8 +36,10 @@ export default function PasswordInput({
           {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
         </button>
       </div>
-      {errors.password && (
-        <p className="text-sm text-red-500">{errors.password.message}</p>
+      {errors.password?.message && (
+        <p className="text-sm text-red-500">
+          {String(errors.password.message)}
+        </p>
       )}
     </div>
   );

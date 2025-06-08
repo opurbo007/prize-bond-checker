@@ -42,9 +42,9 @@ export default function RegisterPage() {
 
       toast.success("Registration successful!");
       router.push("/login");
-    } catch (_err) {
+    } catch (err) {
       toast.error("Something went wrong. Please try again.");
-      // console.error("Registration error:", err);
+      console.error("Registration error:", err);
     }
   };
 

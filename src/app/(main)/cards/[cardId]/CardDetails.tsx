@@ -78,9 +78,9 @@ export default function CardDetails({ cardId }: Props) {
       } else {
         toast.error(json.message || "Failed to load card details");
       }
-    } catch (_error) {
+    } catch (err) {
       toast.error("Error loading card details");
-      // console.error("Error fetching card details:", error);
+      console.error("Error fetching card details:", err);
     } finally {
       setLoading(false);
     }
@@ -104,8 +104,8 @@ export default function CardDetails({ cardId }: Props) {
       });
       setSelectedBondIds(new Set());
       toast.success("Selected bonds deleted successfully!");
-    } catch (_error) {
-      // console.error("Batch delete error:", error);
+    } catch (err) {
+      console.error("Batch delete error:", err);
       toast.error("Failed to delete selected bonds. Please try again.");
     } finally {
       setIsLoading(false);
@@ -138,8 +138,8 @@ export default function CardDetails({ cardId }: Props) {
       } else {
         toast.error(json.message || "Failed to update bond. Please try again.");
       }
-    } catch (_err) {
-      // console.error(err);
+    } catch (err) {
+      console.error(err);
       toast.error("Error updating bond. Please try again.");
     } finally {
       setIsLoading(false);
@@ -187,8 +187,8 @@ export default function CardDetails({ cardId }: Props) {
 
       setBondInput("");
       toast.success("Bond added successfully!");
-    } catch (_err) {
-      // console.error("Error adding bond:", err);
+    } catch (err) {
+      console.error("Error adding bond:", err);
       toast.error("Error adding bond. Please try again.");
     } finally {
       setIsLoading(false);
