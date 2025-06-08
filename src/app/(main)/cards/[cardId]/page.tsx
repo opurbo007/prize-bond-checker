@@ -1,13 +1,9 @@
-import dynamic from "next/dynamic";
+import CardDetails from "./CardDetails";
 
-const CardDetails = dynamic(() => import("./CardDetails"));
+export default async function Page({ params }: { params: { cardId: string } }) {
+  const { cardId } = params;
 
-interface PageProps {
-  params: {
-    cardId: string;
-  };
-}
+  // console.log("Card ID:", cardId);
 
-export default function CardPage({ params }: PageProps) {
-  return <CardDetails cardId={params.cardId} />;
+  return <CardDetails cardId={cardId} />;
 }

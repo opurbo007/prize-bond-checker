@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Navbar({ name }: { name?: string }) {
   const router = useRouter();
@@ -27,9 +28,11 @@ export default function Navbar({ name }: { name?: string }) {
           <AvatarImage src="/placeholder-avatar.png" alt={name ?? "User"} />
           <AvatarFallback>{name ? name.charAt(0) : "U"}</AvatarFallback>
         </Avatar>
-        <span className="text-lg font-semibold text-black">
-          Welcome, {name ?? "User"}
-        </span>
+        <Link href="/">
+          <span className="text-lg font-semibold text-black">
+            Welcome, {name ?? "User"}
+          </span>
+        </Link>
       </div>
 
       <Button

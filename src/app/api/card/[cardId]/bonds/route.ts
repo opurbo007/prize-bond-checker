@@ -6,7 +6,6 @@ import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
 import { PrizeBond } from "@/lib/types";
 
-
 export async function POST(
   req: NextRequest,
   { params }: { params: { cardId: string } }
@@ -59,12 +58,18 @@ export async function POST(
   }
 }
 
-export async function GET({ params }: { params: { cardId: string } }) {
+export async function GET(
+  _: Request,
+  { params }: { params: { cardId: string } }
+) {
   try {
     await connectDB();
-    const card = await Card.findById(params.cardId).select("name prizeBonds");
 
-    console.log("GET /api/card/[id]/bond - card:", card);
+    const cardId = params.cardId;
+    console.log("GET /api/card/[id]/bonds - cardId:", cardId);
+
+    const card = await Card.findById(cardId).select("name prizeBonds");
+
     if (!card) {
       return NextResponse.json({ message: "Card not found" }, { status: 404 });
     }
