@@ -111,18 +111,18 @@ export default function HomePage() {
       const json = await res.json();
 
       if (!res.ok) {
-        alert(json.message || "Failed to add bond");
+        toast.error("Fail to add Bond");
         return;
       }
 
       const updatedCard = json.data.card;
-
+      toast.success("Bond added successfully!");
       setCards((prev) =>
         prev.map((card) => (card._id === cardId ? updatedCard : card))
       );
     } catch (err) {
       console.error("Error adding bond:", err);
-      alert("Error adding bond.");
+      toast.error("Failed to add bond. Please try again.");
     }
   };
 

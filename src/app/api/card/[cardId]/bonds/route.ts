@@ -70,9 +70,9 @@ export async function GET(
   try {
     await connectDB();
 
-    const cardId = await context.params;
+    const cardId = (await context.params).cardId;
 
-    // console.log("GET /api/card/[id]/bonds - cardId:", cardId);
+    console.log("GET - cardId:", cardId);
 
     const card = await Card.findById(cardId).select("name prizeBonds");
 

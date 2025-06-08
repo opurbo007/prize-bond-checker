@@ -39,7 +39,10 @@ export async function GET(_req: NextRequest) {
     });
   } catch (error) {
     console.error("GET /api/cards error:", error);
-    throw new ApiError(500, "Internal Server Error");
+    return NextResponse.json(
+      new ApiResponse(500, null, "Failed to fetch cards"),
+      { status: 500 }
+    );
   }
 }
 
@@ -70,6 +73,9 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error("POST /api/cards error:", error);
-    throw new ApiError(500, "Internal Server Error");
+    return NextResponse.json(
+      new ApiResponse(500, null, "Failed to create card"),
+      { status: 500 }
+    );
   }
 }
