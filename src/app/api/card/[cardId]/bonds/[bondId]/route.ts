@@ -4,11 +4,14 @@ import { Card } from "@/models/card";
 import { getUserFromCookie } from "@/lib/auth";
 import { PrizeBond } from "@/lib/types";
 
-export async function DELETE({
-  params,
-}: {
-  params: { cardId: string; bondId: string };
-}) {
+export async function DELETE(
+  _: NextRequest,
+  {
+    params,
+  }: {
+    params: { cardId: string; bondId: string };
+  }
+) {
   await connectDB();
 
   try {

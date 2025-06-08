@@ -5,7 +5,10 @@ import { getUserFromCookie } from "@/lib/auth";
 import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
 
-export async function DELETE({ params }: { params: { cardId: string } }) {
+export async function DELETE(
+  _: NextRequest,
+  { params }: { params: { cardId: string } }
+) {
   try {
     await connectDB();
 

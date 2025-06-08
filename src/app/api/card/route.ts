@@ -6,7 +6,7 @@ import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
 import { PrizeBond } from "@/lib/types";
 
-export async function GET() {
+export async function GET(_: NextRequest) {
   try {
     await connectDB();
 
