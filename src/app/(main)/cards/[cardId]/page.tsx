@@ -1,7 +1,11 @@
 import CardDetails from "./CardDetails";
 
-export default async function Page({ params }: { params: { cardId: string } }) {
-  const { cardId } = params;
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ cardId: string }>;
+}) {
+  const { cardId } = await params;
 
   // console.log("Card ID:", cardId);
 
