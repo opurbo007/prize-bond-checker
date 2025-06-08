@@ -5,6 +5,7 @@ import { getUserFromCookie } from "@/lib/auth";
 import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function DELETE(
   _: NextRequest,
   { params }: { params: { cardId: string } }

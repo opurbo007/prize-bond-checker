@@ -4,6 +4,7 @@ import { Card } from "@/models/card";
 import { getUserFromCookie } from "@/lib/auth";
 import { PrizeBond } from "@/lib/types";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function DELETE(
   _: NextRequest,
   {

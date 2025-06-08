@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/ApiError";
 import { ApiResponse } from "@/lib/ApiResponse";
 import { PrizeBond } from "@/lib/types";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(_: NextRequest) {
   try {
     await connectDB();
