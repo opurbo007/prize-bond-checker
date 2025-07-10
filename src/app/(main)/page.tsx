@@ -213,7 +213,7 @@ export default function HomePage() {
   return (
     <>
       {hasCards && (
-        <div className="flex flex-col sm:flex-row justify-between items-center py-8 sm:py-20 px-5">
+        <div className="flex flex-col-reverse sm:flex-row space-y-2 sm:space-y-0 justify-between items-center py-5 sm:py-20 px-5">
           {/* add card  */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild className="">
@@ -251,7 +251,7 @@ export default function HomePage() {
             </DialogContent>
           </Dialog>
           {/* search  */}
-          <div className="w-full max-w-xl ">
+          <div className="w-full max-w-xl">
             <div className="flex gap-3 items-center">
               <Input
                 type="text"
