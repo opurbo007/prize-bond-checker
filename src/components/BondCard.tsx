@@ -151,6 +151,11 @@ export default function BondCard({
             value={bondInput}
             disabled={isLoading}
             onChange={(e) => setBondInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddBond();
+              }
+            }}
             className="bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-black focus:border-black rounded-md"
           />
           <Button
