@@ -213,7 +213,7 @@ export default function HomePage() {
   return (
     <>
       {hasCards && (
-        <div className="flex flex-col-reverse sm:flex-row space-x-2 sm:space-y-0 justify-between items-center py-5 sm:py-20 px-5">
+        <div className="flex flex-col-reverse sm:flex-row gap-5 justify-between items-center py-5 sm:py-20 px-5">
           {/* add card  */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild className="">
