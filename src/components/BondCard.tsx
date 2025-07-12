@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState,useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
@@ -59,6 +59,7 @@ export default function BondCard({
   const [editName, setEditName] = useState(name);
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const inputRef = useRef(null);
 
   const handleAddBond = async () => {
     const trimmed = bondInput.trim();
@@ -67,6 +68,7 @@ export default function BondCard({
     setIsLoading(true);
     await onAddBond(cardId, trimmed);
     setBondInput("");
+    inputRef.current?.focus();
     setIsLoading(false);
   };
 
@@ -147,6 +149,7 @@ export default function BondCard({
 
         <div className="flex gap-3">
           <Input
+             ref={inputRef}
             placeholder="Quick add bond #"
             value={bondInput}
             disabled={isLoading}
