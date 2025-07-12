@@ -59,7 +59,7 @@ export default function BondCard({
   const [editName, setEditName] = useState(name);
 
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const inputRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleAddBond = async () => {
     const trimmed = bondInput.trim();
