@@ -79,8 +79,16 @@ export async function GET(
     if (!card) {
       return NextResponse.json({ message: "Card not found" }, { status: 404 });
     }
+    const reversedPrizeBonds = [...card.prizeBonds].reverse();
 
-    return NextResponse.json({ data: { card } });
+    return NextResponse.json({
+      data: {
+        card: {
+          ...card.toObject(),
+          prizeBonds: reversedPrizeBonds,
+        },
+      },
+    });
   } catch (err) {
     console.error("GET bond error:", err);
     return NextResponse.json({ message: "Server error" }, { status: 500 });
