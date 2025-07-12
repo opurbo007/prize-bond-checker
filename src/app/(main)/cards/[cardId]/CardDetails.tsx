@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef} from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -68,6 +68,7 @@ export default function CardDetails({ cardId }: Props) {
   });
   const [bondInput, setBondInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const fetchCardDetails = useCallback(async () => {
     try {
@@ -192,6 +193,9 @@ export default function CardDetails({ cardId }: Props) {
       toast.error("Error adding bond. Please try again.");
     } finally {
       setIsLoading(false);
+       setTimeout(() => {
+    inputRef.current?.focus();
+  }, 0);
     }
   };
 
@@ -326,10 +330,16 @@ export default function CardDetails({ cardId }: Props) {
 
           <div className="flex gap-3">
             <Input
+                ref={inputRef}
               placeholder="Quick add bond #"
               value={bondInput}
               disabled={isLoading}
               onChange={(e) => setBondInput(e.target.value)}
+               onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleAddBond();
+              }
+            }}
               className="border-2 border-gray-400"
             />
             <Button
