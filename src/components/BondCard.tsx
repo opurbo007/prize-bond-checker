@@ -68,8 +68,10 @@ export default function BondCard({
     setIsLoading(true);
     await onAddBond(cardId, trimmed);
     setBondInput("");
-    inputRef.current?.focus();
     setIsLoading(false);
+     setTimeout(() => {
+    inputRef.current?.focus();
+  }, 0);
   };
 
   const handleEditSave = async () => {
