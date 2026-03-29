@@ -366,7 +366,7 @@ export default function BondCard({
       </AlertDialog>
       {/* Preview Modal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent style={{ width: "36rem" }}>
+        <DialogContent className="sm:max-w-[900px] w-2xl max-w-lg">
           <DialogHeader>
             <DialogTitle>Detected Bonds</DialogTitle>
           </DialogHeader>
@@ -431,7 +431,7 @@ export default function BondCard({
                       variant="destructive"
                       onClick={handleRemove}
                     >
-                      Remove
+                      x
                     </Button>
                   </div>
                 );
