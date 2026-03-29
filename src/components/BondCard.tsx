@@ -164,7 +164,7 @@ export default function BondCard({
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      ctx.filter = "contrast(200%) brightness(150%) grayscale(100%)";
+      // ctx.filter = "contrast(200%) brightness(150%) grayscale(100%)";
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(async (blob) => {
