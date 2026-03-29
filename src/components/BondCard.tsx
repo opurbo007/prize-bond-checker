@@ -55,7 +55,7 @@ export default function BondCard({
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editName, setEditName] = useState(name);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [previewNumbers, setPreviewNumbers] = useState<string[]>([]);
+  const [previewNumbers, setPreviewNumbers] = useState<{ value: string }[]>([]);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
@@ -107,7 +107,7 @@ export default function BondCard({
 
     return { valid, invalid, duplicates };
   };
-
+  const { valid } = analyzeBanglaPrizeBonds(previewNumbers.map((p) => p.value));
   const handleAddBond = async () => {
     const trimmed = bondInput.trim();
     if (!trimmed) return;
@@ -178,7 +178,10 @@ export default function BondCard({
           const numbers = extractNumbers(result.data.text);
 
           // Only show new numbers in preview
-          const newNumbers = numbers.filter((n) => !previewNumbers.includes(n));
+          const newNumbers = numbers
+            .filter((n) => !previewNumbers.some((p) => p.value === n))
+            .map((n) => ({ value: n }));
+
           if (newNumbers.length > 0) {
             setPreviewNumbers((prev) => [...prev, ...newNumbers]);
             setIsPreviewOpen(true);
@@ -363,62 +366,77 @@ export default function BondCard({
       </AlertDialog>
       {/* Preview Modal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="w-2xl max-w-lg">
+        <DialogContent style={{ width: "36rem" }}>
           <DialogHeader>
             <DialogTitle>Detected Bonds</DialogTitle>
           </DialogHeader>
-          <div className="max-h-60  overflow-auto border p-3 text-sm space-y-1">
+          <div className="max-h-60 overflow-auto border p-3 text-sm space-y-2">
+            {/* Summary */}
             <div className="text-sm mb-3 space-y-1">
-              <p>
-                ✅ Valid: {analyzeBanglaPrizeBonds(previewNumbers).valid.length}
-              </p>
-              <p className="text-yellow-600">
-                ⚠ Duplicates:{" "}
-                {analyzeBanglaPrizeBonds(previewNumbers).duplicates.size}
-              </p>
-              <p className="text-red-600">
-                ❌ Invalid:{" "}
-                {analyzeBanglaPrizeBonds(previewNumbers).invalid.length}
-              </p>
-            </div>
-            {previewNumbers.map((num, i) => {
-              const { invalid, duplicates } =
-                analyzeBanglaPrizeBonds(previewNumbers);
-              const isInvalid = invalid.includes(num);
-              const isDuplicate = duplicates.has(num);
-
-              // Function to remove a number from previewNumbers
-              const handleRemove = (numToRemove: string) => {
-                setPreviewNumbers((prev) =>
-                  prev.filter((num) => num !== numToRemove),
+              {(() => {
+                const analysis = analyzeBanglaPrizeBonds(
+                  previewNumbers.map((p) => p.value),
                 );
-              };
+                return (
+                  <>
+                    <p>✅ Valid: {analysis.valid.length}</p>
+                    <p className="text-yellow-600">
+                      ⚠ Duplicates: {analysis.duplicates.size}
+                    </p>
+                    <p className="text-red-600">
+                      ❌ Invalid: {analysis.invalid.length}
+                    </p>
+                  </>
+                );
+              })()}
+            </div>
 
-              return (
-                <div
-                  key={i}
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 items-center"
-                >
-                  <p
-                    className={`px-2 py-1 rounded border
-          ${isInvalid ? "bg-red-100 text-red-700 border-red-300" : ""}
-          ${isDuplicate ? "bg-yellow-100 text-yellow-700 border-yellow-300" : ""}
-          ${!isInvalid && !isDuplicate ? "bg-green-50 text-green-700 border-green-200" : ""}
-        `}
-                  >
-                    {num} {isInvalid && "❌"} {isDuplicate && "⚠"}
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleRemove(num)}
-                    className="ml-2"
-                  >
-                    Remove
-                  </Button>
-                </div>
-              );
-            })}
+            {/* Editable numbers */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {previewNumbers.map((numObj, i) => {
+                const { value } = numObj;
+                const numbers = previewNumbers.map((p) => p.value);
+                const analysis = analyzeBanglaPrizeBonds(numbers);
+
+                const isInvalid = analysis.invalid.includes(value);
+                const isDuplicate = analysis.duplicates.has(value);
+                const isSuspicious = /[19]/.test(value);
+
+                const handleChange = (newVal: string) => {
+                  setPreviewNumbers((prev) =>
+                    prev.map((p, idx) => (idx === i ? { value: newVal } : p)),
+                  );
+                };
+
+                const handleRemove = () => {
+                  setPreviewNumbers((prev) =>
+                    prev.filter((_, idx) => idx !== i),
+                  );
+                };
+
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      value={value}
+                      onChange={(e) => handleChange(e.target.value)}
+                      className={`px-2 py-1 rounded border flex-1
+              ${isInvalid ? "bg-red-100 text-red-700 border-red-300" : ""}
+              ${isDuplicate ? "bg-yellow-100 text-yellow-700 border-yellow-300" : ""}
+              ${isSuspicious && !isInvalid && !isDuplicate ? "bg-orange-100 text-orange-700 border-orange-300" : ""}
+              ${!isInvalid && !isDuplicate && !isSuspicious ? "bg-green-50 text-green-700 border-green-200" : ""}
+            `}
+                    />
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={handleRemove}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -440,18 +458,24 @@ export default function BondCard({
             <Button
               disabled={loading}
               onClick={async () => {
-                const { valid } = analyzeBanglaPrizeBonds(previewNumbers);
+                const numbers = previewNumbers.map((p) => p.value.trim());
+                const { valid } = analyzeBanglaPrizeBonds(numbers);
                 if (valid.length === 0) return;
+
                 setIsLoading(true);
                 await onAddBond(cardId, valid);
                 setIsLoading(false);
+
                 setPreviewNumbers([]);
                 setIsPreviewOpen(false);
               }}
             >
               {loading
                 ? "Adding..."
-                : `Add ${analyzeBanglaPrizeBonds(previewNumbers).valid.length} Bonds`}
+                : `Add ${
+                    analyzeBanglaPrizeBonds(previewNumbers.map((p) => p.value))
+                      .valid.length
+                  } Bonds`}
             </Button>
           </DialogFooter>
         </DialogContent>
