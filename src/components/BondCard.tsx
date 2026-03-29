@@ -107,7 +107,7 @@ export default function BondCard({
 
     return { valid, invalid, duplicates };
   };
-  const { valid } = analyzeBanglaPrizeBonds(previewNumbers.map((p) => p.value));
+
   const handleAddBond = async () => {
     const trimmed = bondInput.trim();
     if (!trimmed) return;
