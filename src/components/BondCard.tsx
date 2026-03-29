@@ -216,6 +216,7 @@ export default function BondCard({
 
   useEffect(() => {
     const stableNumbers = Object.entries(ocrBuffer)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .filter(([_num, count]) => count >= 3)
       .map(([num]) => num);
 
@@ -435,6 +436,7 @@ export default function BondCard({
 
                 const handleRemove = () => {
                   setPreviewNumbers((prev) =>
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     prev.filter((_num, idx) => idx !== i),
                   );
                 };
