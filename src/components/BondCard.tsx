@@ -156,10 +156,10 @@ export default function BondCard({
     if (workerRef.current) return workerRef.current;
 
     const worker = await Tesseract.createWorker("eng");
-    // @ts-ignore
+   // @ts-expect-error: tessedit_pageseg_mode typing is incorrect in tesseract.js
     await worker.setParameters({
-      tessedit_char_whitelist: "0123456789" as any,
-      tessedit_pageseg_mode: 6 as any,
+      tessedit_char_whitelist: "0123456789",
+      tessedit_pageseg_mode: 6 as any, 
     });
     workerRef.current = worker;
     return worker;
