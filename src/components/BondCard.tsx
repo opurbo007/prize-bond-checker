@@ -63,6 +63,7 @@ export default function BondCard({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [ocrBuffer, setOcrBuffer] = useState<Record<string, number>>({});
+  const workerRef = useRef<Tesseract.Worker | null>(null);
 
   // Convert Bangla digits to English
   const convert = (text: string) => {
@@ -150,6 +151,19 @@ export default function BondCard({
       setOcrBuffer({});
     }
   };
+
+  const getWorker = async () => {
+    if (workerRef.current) return workerRef.current;
+
+    const worker = await Tesseract.createWorker("eng");
+    // @ts-ignore
+    await worker.setParameters({
+      tessedit_char_whitelist: "0123456789" as any,
+      tessedit_pageseg_mode: 6 as any,
+    });
+    workerRef.current = worker;
+    return worker;
+  };
   // Continuous scanning
   useEffect(() => {
     const scanFrame = async () => {
@@ -162,10 +176,19 @@ export default function BondCard({
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      // ctx.filter = "contrast(200%) brightness(150%) grayscale(100%)";
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const w = video.videoWidth;
+      const h = video.videoHeight;
+
+      const cropW = w * 0.6;
+      const cropH = h * 0.3;
+
+      const startX = (w - cropW) / 2;
+      const startY = (h - cropH) / 2;
+
+      canvas.width = cropW;
+      canvas.height = cropH;
+
+      ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
 
       canvas.toBlob(async (blob) => {
         if (!blob) {
@@ -174,7 +197,8 @@ export default function BondCard({
         }
 
         try {
-          const result = await Tesseract.recognize(blob, "ben+eng");
+          const worker = await getWorker();
+          const result = await worker.recognize(blob);
           const numbers = extractNumbers(result.data.text);
 
           setOcrBuffer((prev) => {
@@ -217,7 +241,7 @@ export default function BondCard({
   useEffect(() => {
     const stableNumbers = Object.entries(ocrBuffer)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .filter(([_num, count]) => count >= 3)
+      .filter(([_num, count]) => count >= 1)
       .map(([num]) => num);
 
     const newNumbers = stableNumbers
