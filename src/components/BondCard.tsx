@@ -363,11 +363,11 @@ export default function BondCard({
       </AlertDialog>
       {/* Preview Modal */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="w-2xl max-w-lg">
           <DialogHeader>
             <DialogTitle>Detected Bonds</DialogTitle>
           </DialogHeader>
-          <div className="max-h-60 overflow-auto border p-3 text-sm space-y-1">
+          <div className="max-h-60  overflow-auto border p-3 text-sm space-y-1">
             <div className="text-sm mb-3 space-y-1">
               <p>
                 ✅ Valid: {analyzeBanglaPrizeBonds(previewNumbers).valid.length}
@@ -421,8 +421,21 @@ export default function BondCard({
             })}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsPreviewOpen(false);
+                setPreviewNumbers([]);
+              }}
+            >
               Cancel
+            </Button>
+            <Button
+              onClick={stopCamera}
+              className="flex-1 bg-red-600 text-white hover:bg-red-500 rounded-md"
+              disabled={!stream}
+            >
+              Stop Camera
             </Button>
             <Button
               disabled={loading}
@@ -436,8 +449,9 @@ export default function BondCard({
                 setIsPreviewOpen(false);
               }}
             >
-              Confirm & Save (
-              {analyzeBanglaPrizeBonds(previewNumbers).valid.length})
+              {loading
+                ? "Adding..."
+                : `Add ${analyzeBanglaPrizeBonds(previewNumbers).valid.length} Bonds`}
             </Button>
           </DialogFooter>
         </DialogContent>
