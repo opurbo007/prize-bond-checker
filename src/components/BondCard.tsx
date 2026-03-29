@@ -63,7 +63,7 @@ export default function BondCard({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [ocrBuffer, setOcrBuffer] = useState<Record<string, number>>({});
-  const workerRef = useRef<Tesseract.Worker | null>(null);
+
 
   // Convert Bangla digits to English
   const convert = (text: string) => {
