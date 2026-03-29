@@ -64,7 +64,6 @@ export default function BondCard({
   const inputRef = useRef<HTMLInputElement>(null);
   const [ocrBuffer, setOcrBuffer] = useState<Record<string, number>>({});
 
-
   // Convert Bangla digits to English
   const convert = (text: string) => {
     const map: Record<string, string> = {
@@ -131,6 +130,8 @@ export default function BondCard({
   };
 
   // Start webcam
+  const scanIntervalRef = useRef<number | null>(null);
+
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -139,82 +140,80 @@ export default function BondCard({
         videoRef.current.play();
       }
       setStream(stream);
+
+      // Start scanning
+      if (!scanIntervalRef.current) {
+        scanIntervalRef.current = window.setInterval(scanFrame, 500); // faster scan
+      }
     } catch (err) {
       console.error("Camera access denied", err);
       alert("Camera access denied or unavailable");
     }
   };
+
   const stopCamera = () => {
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
       setOcrBuffer({});
     }
+
+    // Stop scanning
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
   };
-  
+
+  const scanFrame = async () => {
+    if (scanning) return;
+    if (!videoRef.current || !videoRef.current.srcObject) return;
+    setScanning(true);
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+    const cropW = w * 0.6;
+    const cropH = h * 0.3;
+    const startX = (w - cropW) / 2;
+    const startY = (h - cropH) / 2;
+
+    canvas.width = cropW;
+    canvas.height = cropH;
+    ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        setScanning(false);
+        return;
+      }
+
+      try {
+        const result = await Tesseract.recognize(blob, "ben+eng");
+        const numbers = extractNumbers(result.data.text);
+
+        setOcrBuffer((prev) => {
+          const updated = { ...prev };
+          numbers.forEach((num) => {
+            updated[num] = (updated[num] || 0) + 1;
+          });
+          return updated;
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setScanning(false);
+      }
+    }, "image/jpeg");
+  };
   // Continuous scanning
   useEffect(() => {
-    const scanFrame = async () => {
-      if (scanning) return;
-      if (!videoRef.current || !videoRef.current.srcObject) return;
-      setScanning(true);
-
-      const video = videoRef.current!;
-      const canvas = canvasRef.current!;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      const w = video.videoWidth;
-      const h = video.videoHeight;
-
-      const cropW = w * 0.6;
-      const cropH = h * 0.3;
-
-      const startX = (w - cropW) / 2;
-      const startY = (h - cropH) / 2;
-
-      canvas.width = cropW;
-      canvas.height = cropH;
-
-      ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
-
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          setScanning(false);
-          return;
-        }
-
-        try {
-          const result = await Tesseract.recognize(blob, "ben+eng");
-          const numbers = extractNumbers(result.data.text);
-
-          setOcrBuffer((prev) => {
-            const updated = { ...prev };
-
-            numbers.forEach((num) => {
-              updated[num] = (updated[num] || 0) + 1;
-            });
-
-            return updated;
-          });
-
-          // // Only show new numbers in preview
-          // const newNumbers = numbers
-          //   .filter((n) => !previewNumbers.some((p) => p.value === n))
-          //   .map((n) => ({ value: n }));
-
-          // if (newNumbers.length > 0) {
-          //   setPreviewNumbers((prev) => [...prev, ...newNumbers]);
-          //   setIsPreviewOpen(true);
-          // }
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setScanning(false);
-        }
-      }, "image/jpeg");
-    };
-
     const interval = window.setInterval(scanFrame, 1000);
     return () => clearInterval(interval);
   }, [previewNumbers, scanning]);
