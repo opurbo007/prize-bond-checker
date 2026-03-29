@@ -216,7 +216,7 @@ export default function BondCard({
 
   useEffect(() => {
     const stableNumbers = Object.entries(ocrBuffer)
-      .filter(([_, count]) => count >= 3)
+      .filter(([_num, count]) => count >= 3)
       .map(([num]) => num);
 
     const newNumbers = stableNumbers
@@ -435,7 +435,7 @@ export default function BondCard({
 
                 const handleRemove = () => {
                   setPreviewNumbers((prev) =>
-                    prev.filter((_, idx) => idx !== i),
+                    prev.filter((_num, idx) => idx !== i),
                   );
                 };
 
