@@ -386,19 +386,36 @@ export default function BondCard({
                 analyzeBanglaPrizeBonds(previewNumbers);
               const isInvalid = invalid.includes(num);
               const isDuplicate = duplicates.has(num);
+
+              // Function to remove a number from previewNumbers
+              const handleRemove = (numToRemove: string) => {
+                setPreviewNumbers((prev) =>
+                  prev.filter((num) => num !== numToRemove),
+                );
+              };
+
               return (
                 <div
                   key={i}
-                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"
+                  className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 items-center"
                 >
                   <p
                     className={`px-2 py-1 rounded border
-                    ${isInvalid ? "bg-red-100 text-red-700 border-red-300" : ""}
-                    ${isDuplicate ? "bg-yellow-100 text-yellow-700 border-yellow-300" : ""}
-                    ${!isInvalid && !isDuplicate ? "bg-green-50 text-green-700 border-green-200" : ""}`}
+          ${isInvalid ? "bg-red-100 text-red-700 border-red-300" : ""}
+          ${isDuplicate ? "bg-yellow-100 text-yellow-700 border-yellow-300" : ""}
+          ${!isInvalid && !isDuplicate ? "bg-green-50 text-green-700 border-green-200" : ""}
+        `}
                   >
                     {num} {isInvalid && "❌"} {isDuplicate && "⚠"}
                   </p>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => handleRemove(num)}
+                    className="ml-2"
+                  >
+                    Remove
+                  </Button>
                 </div>
               );
             })}
