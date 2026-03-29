@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import { Card } from "@/models/card";
@@ -18,11 +20,11 @@ export async function GET(_req: NextRequest) {
 
     const cardsWithStats = cards.map((card) => {
       const heldBonds = card.prizeBonds.filter(
-        (bond: PrizeBond) => bond.status === "hold"
+        (bond: PrizeBond) => bond.status === "hold",
       );
 
       const winBonds = card.prizeBonds.filter(
-        (bond: PrizeBond) => bond.status === "win"
+        (bond: PrizeBond) => bond.status === "win",
       );
 
       return {
@@ -41,7 +43,7 @@ export async function GET(_req: NextRequest) {
     console.error("GET /api/cards error:", error);
     return NextResponse.json(
       new ApiResponse(500, null, "Failed to fetch cards"),
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -69,13 +71,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       new ApiResponse(201, { card: newCard }, "Card created"),
-      { status: 201 }
+      { status: 201 },
     );
   } catch (error) {
     console.error("POST /api/cards error:", error);
     return NextResponse.json(
       new ApiResponse(500, null, "Failed to create card"),
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
