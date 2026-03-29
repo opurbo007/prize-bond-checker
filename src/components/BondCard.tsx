@@ -175,7 +175,7 @@ export default function BondCard({
       canvas.height = cropH;
 
       ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
-      
+
       canvas.toBlob(async (blob) => {
         if (!blob) {
           setScanning(false);
@@ -216,7 +216,7 @@ export default function BondCard({
   useEffect(() => {
     const stableNumbers = Object.entries(ocrBuffer)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .filter(([_num, count]) => count >= 2)
+      .filter(([_num, count]) => count >= 1)
       .map(([num]) => num);
 
     const newNumbers = stableNumbers
