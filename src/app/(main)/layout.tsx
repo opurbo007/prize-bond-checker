@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Navbar from "@/components/Navbar";
 import { getUserFromCookie } from "@/lib/auth";
 import React from "react";
