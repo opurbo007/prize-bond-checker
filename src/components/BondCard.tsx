@@ -151,19 +151,7 @@ export default function BondCard({
       setOcrBuffer({});
     }
   };
-
-  const getWorker = async () => {
-    if (workerRef.current) return workerRef.current;
-
-    const worker = await Tesseract.createWorker("eng");
-   // @ts-expect-error: tessedit_pageseg_mode typing is incorrect in tesseract.js
-    await worker.setParameters({
-      tessedit_char_whitelist: "0123456789",
-      tessedit_pageseg_mode: 6 as any, 
-    });
-    workerRef.current = worker;
-    return worker;
-  };
+  
   // Continuous scanning
   useEffect(() => {
     const scanFrame = async () => {
@@ -197,8 +185,7 @@ export default function BondCard({
         }
 
         try {
-          const worker = await getWorker();
-          const result = await worker.recognize(blob);
+          const result = await Tesseract.recognize(blob, "ben+eng");
           const numbers = extractNumbers(result.data.text);
 
           setOcrBuffer((prev) => {
