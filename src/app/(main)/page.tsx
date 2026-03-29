@@ -102,12 +102,17 @@ export default function HomePage() {
     }
   };
 
-  const handleAddBond = async (cardId: string, bondNumber: string) => {
+  const handleAddBond = async (
+    cardId: string,
+    bondInput: string | string[],
+  ) => {
+    const numbers = Array.isArray(bondInput) ? bondInput : [bondInput];
+
     try {
       const res = await fetch(`/api/card/${cardId}/bonds`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ number: bondNumber }),
+        body: JSON.stringify({ numbers }),
       });
 
       const json = await res.json();
@@ -119,8 +124,9 @@ export default function HomePage() {
 
       const updatedCard = json.data.card;
       toast.success("Bond added successfully!");
+
       setCards((prev) =>
-        prev.map((card) => (card._id === cardId ? updatedCard : card))
+        prev.map((card) => (card._id === cardId ? updatedCard : card)),
       );
     } catch (err) {
       console.error("Error adding bond:", err);
@@ -155,8 +161,8 @@ export default function HomePage() {
     toast.success("Card edited successfully!");
     setCards((prevCards) =>
       prevCards.map((card) =>
-        card._id === cardId ? { ...card, name: newName } : card
-      )
+        card._id === cardId ? { ...card, name: newName } : card,
+      ),
     );
   };
 
@@ -299,7 +305,7 @@ export default function HomePage() {
                       <p className="text-black dark:text-white capitalize">
                         <span className="font-semibold">Purchase Date:</span>{" "}
                         {new Date(
-                          result.bond.purchaseDate
+                          result.bond.purchaseDate,
                         ).toLocaleDateString()}
                       </p>
                       <p className="text-black dark:text-white">
@@ -309,10 +315,10 @@ export default function HomePage() {
                             result.bond.status === "hold"
                               ? "text-green-600 dark:text-green-400"
                               : result.bond.status === "win"
-                              ? "text-yellow-600 dark:text-yellow-400"
-                              : result.bond.status === "sell"
-                              ? "text-red-600 dark:text-red-400"
-                              : ""
+                                ? "text-yellow-600 dark:text-yellow-400"
+                                : result.bond.status === "sell"
+                                  ? "text-red-600 dark:text-red-400"
+                                  : ""
                           }
                         >
                           {result.bond.status.charAt(0).toUpperCase() +

@@ -8,7 +8,7 @@ import { PrizeBond } from "@/lib/types";
 
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ cardId: string }> }
+  context: { params: Promise<{ cardId: string }> },
 ) {
   try {
     await connectDB();
@@ -17,38 +17,44 @@ export async function POST(
     if (!user) throw new ApiError(401, "Unauthorized");
 
     const { cardId } = await context.params;
-    const { number } = await req.json();
 
-    if (!number) throw new ApiError(400, "Bond number is required");
+    const { numbers } = await req.json();
+
+    if (!numbers || !Array.isArray(numbers) || numbers.length === 0) {
+      throw new ApiError(400, "Bond numbers are required");
+    }
+
+    const bondsToInsert = numbers.map((num: string) => ({
+      number: num,
+      purchaseDate: new Date(),
+      status: "hold",
+    }));
 
     const updatedCard = await Card.findOneAndUpdate(
       { _id: cardId, userId: user.id },
       {
         $push: {
           prizeBonds: {
-            number,
-            purchaseDate: new Date(),
-            status: "hold",
+            $each: bondsToInsert,
           },
         },
       },
-      { new: true }
+      { new: true },
     );
-
     if (!updatedCard) throw new ApiError(404, "Card not found");
 
     const cardWithCounts = {
       ...updatedCard.toObject(),
       totalBond: updatedCard.prizeBonds.filter(
-        (b: PrizeBond) => b.status !== "sell" && b.status !== "win"
+        (b: PrizeBond) => b.status !== "sell" && b.status !== "win",
       ).length,
       totalWin: updatedCard.prizeBonds.filter(
-        (b: PrizeBond) => b.status === "win"
+        (b: PrizeBond) => b.status === "win",
       ).length,
     };
 
     return NextResponse.json(
-      new ApiResponse(200, { card: cardWithCounts }, "Bond added")
+      new ApiResponse(200, { card: cardWithCounts }, "Bond added"),
     );
   } catch (error) {
     console.error("POST /api/card/[cardId]/bonds - error:", error);
@@ -65,7 +71,7 @@ export async function POST(
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function GET(
   _req: NextRequest,
-  context: { params: Promise<{ cardId: string }> }
+  context: { params: Promise<{ cardId: string }> },
 ) {
   try {
     await connectDB();

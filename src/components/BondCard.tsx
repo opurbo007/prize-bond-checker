@@ -1,17 +1,16 @@
 "use client";
 
-import { useState,useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-
+import Tesseract from "tesseract.js";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-
 import {
   AlertDialog,
   AlertDialogContent,
@@ -22,7 +21,6 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-
 import {
   Dialog,
   DialogContent,
@@ -36,7 +34,7 @@ interface BondCardProps {
   name: string;
   totalBond: number;
   totalWin: number;
-  onAddBond: (cardId: string, bondNumber: string) => Promise<void>;
+  onAddBond: (cardId: string, bondInput: string | string[]) => Promise<void>;
   onEditCard: (cardId: string, newName: string) => Promise<void>;
   onDeleteCard: (cardId: string) => Promise<void>;
   loading?: boolean;
@@ -54,12 +52,61 @@ export default function BondCard({
 }: BondCardProps) {
   const [bondInput, setBondInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editName, setEditName] = useState(name);
-
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [previewNumbers, setPreviewNumbers] = useState<string[]>([]);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Convert Bangla digits to English
+  const convert = (text: string) => {
+    const map: Record<string, string> = {
+      "০": "0",
+      "১": "1",
+      "২": "2",
+      "৩": "3",
+      "৪": "4",
+      "৫": "5",
+      "৬": "6",
+      "৭": "7",
+      "৮": "8",
+      "৯": "9",
+    };
+    return text.replace(/[০-৯]/g, (d) => map[d]);
+  };
+
+  const extractNumbers = (text: string) =>
+    text
+      .replace(/[^\d০-৯]/g, " ")
+      .split(/\s+/)
+      .map(convert)
+      .filter((n) => n.length === 7);
+
+  const analyzeBanglaPrizeBonds = (numbers: string[]) => {
+    const seen = new Set<string>();
+    const duplicates = new Set<string>();
+    const valid: string[] = [];
+    const invalid: string[] = [];
+
+    numbers.forEach((num) => {
+      const trimmed = num.trim();
+      const isValid = /^\d{7}$/.test(trimmed);
+
+      if (!isValid) invalid.push(trimmed);
+      else if (seen.has(trimmed)) duplicates.add(trimmed);
+      else {
+        seen.add(trimmed);
+        valid.push(trimmed);
+      }
+    });
+
+    return { valid, invalid, duplicates };
+  };
 
   const handleAddBond = async () => {
     const trimmed = bondInput.trim();
@@ -69,9 +116,6 @@ export default function BondCard({
     await onAddBond(cardId, trimmed);
     setBondInput("");
     setIsLoading(false);
-     setTimeout(() => {
-    inputRef.current?.focus();
-  }, 0);
   };
 
   const handleEditSave = async () => {
@@ -84,27 +128,91 @@ export default function BondCard({
     setIsDeleteOpen(false);
   };
 
+  // Start webcam
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      setStream(stream);
+    } catch (err) {
+      console.error("Camera access denied", err);
+      alert("Camera access denied or unavailable");
+    }
+  };
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+    }
+  };
+  // Continuous scanning
+  useEffect(() => {
+    let interval: number;
+
+    const scanFrame = async () => {
+      if (scanning) return;
+      if (!videoRef.current || !videoRef.current.srcObject) return;
+      setScanning(true);
+
+      const video = videoRef.current!;
+      const canvas = canvasRef.current!;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          setScanning(false);
+          return;
+        }
+
+        try {
+          const result = await Tesseract.recognize(blob, "ben+eng");
+          const numbers = extractNumbers(result.data.text);
+
+          // Only show new numbers in preview
+          const newNumbers = numbers.filter((n) => !previewNumbers.includes(n));
+          if (newNumbers.length > 0) {
+            setPreviewNumbers((prev) => [...prev, ...newNumbers]);
+            setIsPreviewOpen(true);
+          }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setScanning(false);
+        }
+      }, "image/jpeg");
+    };
+
+    interval = window.setInterval(scanFrame, 1500);
+    return () => clearInterval(interval);
+  }, [previewNumbers, scanning]);
+
+  useEffect(() => {
+    if (!stream) {
+      setScanning(false);
+    }
+  }, [stream]);
+
   return (
-    <div
-      className="
-      relative
-      bg-white rounded-xl border-4 border-black/60 p-6 flex flex-col justify-between 
-      shadow-2xl mx-auto 
-      transition-all duration-300 
-      hover:shadow-[0_20px_30px_rgba(0,0,0,0.3)] 
-      hover:-translate-y-2 hover:scale-[1.03] 
-      will-change-transform
-    "
-    >
-      {/* Dropdown menu in top-right corner */}
+    <div className="relative bg-white rounded-xl border-4 border-black/60 p-6 flex flex-col shadow-2xl mx-auto transition-all duration-300 hover:shadow-[0_20px_30px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:scale-[1.03] will-change-transform">
+      {/* Dropdown Menu */}
       <div className="absolute top-4 right-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              aria-label="Open menu"
               className="p-1 rounded hover:bg-gray-200 active:bg-gray-300"
+              aria-label="Open menu"
             >
-              {/* 3 dots icon */}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 text-black"
@@ -113,13 +221,12 @@ export default function BondCard({
                 stroke="currentColor"
                 strokeWidth={2}
               >
-                <circle cx="5" cy="12" r="2" />
-                <circle cx="12" cy="12" r="2" />
-                <circle cx="19" cy="12" r="2" />
+                <circle cx={5} cy={12} r={2} />
+                <circle cx={12} cy={12} r={2} />
+                <circle cx={19} cy={12} r={2} />
               </svg>
             </button>
           </DropdownMenuTrigger>
-
           <DropdownMenuContent align="end" className="w-36">
             <DropdownMenuItem onSelect={() => setIsEditOpen(true)}>
               Edit
@@ -134,55 +241,78 @@ export default function BondCard({
         </DropdownMenu>
       </div>
 
-      <div>
-        <h3 className="text-2xl font-semibold text-black mb-5">{name}</h3>
-        <div className="flex justify-between mb-6 text-gray-700 font-medium">
-          <div>
-            <p className="uppercase text-xs tracking-widest mb-1">
-              Total Bonds
-            </p>
-            <p className="text-lg">{totalBond}</p>
-          </div>
-          <div>
-            <p className="uppercase text-xs tracking-widest mb-1">Total Wins</p>
-            <p className="text-lg">{totalWin}</p>
-          </div>
+      <h3 className="text-2xl font-semibold text-black mb-5">{name}</h3>
+      <div className="flex justify-between mb-6 text-gray-700 font-medium">
+        <div>
+          <p className="uppercase text-xs tracking-widest mb-1">Total Bonds</p>
+          <p className="text-lg">{totalBond}</p>
         </div>
-
-        <div className="flex gap-3">
-          <Input
-             ref={inputRef}
-            placeholder="Quick add bond #"
-            value={bondInput}
-            disabled={isLoading}
-            onChange={(e) => setBondInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAddBond();
-              }
-            }}
-            className="bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-black focus:border-black rounded-md"
-          />
-          <Button
-            variant="outline"
-            className="border-black text-black hover:bg-black hover:text-white rounded-md"
-            onClick={handleAddBond}
-            disabled={isLoading}
-          >
-            Add
-          </Button>
+        <div>
+          <p className="uppercase text-xs tracking-widest mb-1">Total Wins</p>
+          <p className="text-lg">{totalWin}</p>
         </div>
       </div>
 
-      <Link href={`/cards/${cardId}`}>
+      {/* Quick Add */}
+      <div className="flex gap-3">
+        <Input
+          ref={inputRef}
+          placeholder="Quick add bond #"
+          value={bondInput}
+          disabled={isLoading}
+          onChange={(e) => setBondInput(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleAddBond()}
+          className="bg-gray-50 border-gray-300 text-black placeholder-gray-400 focus:ring-2 focus:ring-black focus:border-black rounded-md"
+        />
         <Button
-          variant="ghost"
-          className="mt-6 w-full bg-black text-white hover:bg-black/60 hover:text-white rounded-md font-semibold"
+          variant="outline"
+          className="border-black text-black hover:bg-black hover:text-white rounded-md"
+          onClick={handleAddBond}
+          disabled={isLoading}
         >
-          Details
+          Add
         </Button>
-      </Link>
+      </div>
 
+      {/* Camera */}
+      <div className="mt-4 flex flex-col gap-2">
+        <video
+          ref={videoRef}
+          className={`border rounded w-full max-h-60 ${!stream ? "hidden" : ""}`}
+          autoPlay
+          muted
+        />
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <Link href={`/cards/${cardId}`}>
+          <Button
+            variant="ghost"
+            className="w-full bg-black text-white hover:bg-black/60 hover:text-white rounded-md font-semibold"
+          >
+            Details
+          </Button>
+        </Link>
+        <div className="flex gap-2">
+          {stream ? (
+            <Button
+              onClick={stopCamera}
+              className="flex-1 bg-red-600 text-white hover:bg-red-500 rounded-md"
+              disabled={!stream}
+            >
+              Stop Camera
+            </Button>
+          ) : (
+            <Button
+              onClick={startCamera}
+              className="flex-1 bg-gray-800 text-white hover:bg-gray-700 rounded-md"
+              disabled={!!stream}
+            >
+              Start Camera
+            </Button>
+          )}
+        </div>
+      </div>
       {/* Edit Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
@@ -233,6 +363,65 @@ export default function BondCard({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      {/* Preview Modal */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Detected Bonds</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-60 overflow-auto border p-3 text-sm space-y-1">
+            <div className="text-sm mb-3 space-y-1">
+              <p>
+                ✅ Valid: {analyzeBanglaPrizeBonds(previewNumbers).valid.length}
+              </p>
+              <p className="text-yellow-600">
+                ⚠ Duplicates:{" "}
+                {analyzeBanglaPrizeBonds(previewNumbers).duplicates.size}
+              </p>
+              <p className="text-red-600">
+                ❌ Invalid:{" "}
+                {analyzeBanglaPrizeBonds(previewNumbers).invalid.length}
+              </p>
+            </div>
+            {previewNumbers.map((num, i) => {
+              const { invalid, duplicates } =
+                analyzeBanglaPrizeBonds(previewNumbers);
+              const isInvalid = invalid.includes(num);
+              const isDuplicate = duplicates.has(num);
+              return (
+                <div
+                  key={i}
+                  className={`px-2 py-1 rounded border
+                    ${isInvalid ? "bg-red-100 text-red-700 border-red-300" : ""}
+                    ${isDuplicate ? "bg-yellow-100 text-yellow-700 border-yellow-300" : ""}
+                    ${!isInvalid && !isDuplicate ? "bg-green-50 text-green-700 border-green-200" : ""}`}
+                >
+                  {num} {isInvalid && "❌"} {isDuplicate && "⚠"}
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPreviewOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                const { valid } = analyzeBanglaPrizeBonds(previewNumbers);
+                if (valid.length === 0) return;
+                setIsLoading(true);
+                await onAddBond(cardId, valid);
+                setIsLoading(false);
+                setPreviewNumbers([]);
+                setIsPreviewOpen(false);
+              }}
+            >
+              Confirm & Save (
+              {analyzeBanglaPrizeBonds(previewNumbers).valid.length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

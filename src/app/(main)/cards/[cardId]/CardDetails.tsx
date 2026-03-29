@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef} from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -57,7 +57,7 @@ export default function CardDetails({ cardId }: Props) {
   const [card, setCard] = useState<CardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedBondIds, setSelectedBondIds] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [search, setSearch] = useState("");
   const [editBond, setEditBond] = useState<PrizeBond | null>(null);
@@ -100,7 +100,7 @@ export default function CardDetails({ cardId }: Props) {
       setCard({
         ...card,
         prizeBonds: card.prizeBonds.filter(
-          (bond) => !selectedBondIds.has(bond._id)
+          (bond) => !selectedBondIds.has(bond._id),
         ),
       });
       setSelectedBondIds(new Set());
@@ -129,10 +129,10 @@ export default function CardDetails({ cardId }: Props) {
             ? {
                 ...prev,
                 prizeBonds: prev.prizeBonds.map((bond) =>
-                  bond._id === editBond._id ? { ...bond, ...editForm } : bond
+                  bond._id === editBond._id ? { ...bond, ...editForm } : bond,
                 ),
               }
-            : prev
+            : prev,
         );
         setEditBond(null);
         toast.success("Updated successfully!");
@@ -173,7 +173,7 @@ export default function CardDetails({ cardId }: Props) {
       const res = await fetch(`/api/card/${cardId}/bonds`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ number }),
+        body: JSON.stringify({ numbers: [number] }),
       });
 
       const json = await res.json();
@@ -193,9 +193,9 @@ export default function CardDetails({ cardId }: Props) {
       toast.error("Error adding bond. Please try again.");
     } finally {
       setIsLoading(false);
-       setTimeout(() => {
-    inputRef.current?.focus();
-  }, 0);
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -216,7 +216,7 @@ export default function CardDetails({ cardId }: Props) {
           onCheckedChange={(value) => {
             table.toggleAllPageRowsSelected(!!value);
             const newSet = new Set(
-              value ? card?.prizeBonds.map((b) => b._id) : []
+              value ? card?.prizeBonds.map((b) => b._id) : [],
             );
             setSelectedBondIds(newSet);
           }}
@@ -286,7 +286,7 @@ export default function CardDetails({ cardId }: Props) {
   }
 
   const filteredBonds = card.prizeBonds.filter((bond) =>
-    bond.number.includes(search)
+    bond.number.includes(search),
   );
 
   return (
@@ -330,16 +330,16 @@ export default function CardDetails({ cardId }: Props) {
 
           <div className="flex gap-3">
             <Input
-                ref={inputRef}
+              ref={inputRef}
               placeholder="Quick add bond #"
               value={bondInput}
               disabled={isLoading}
               onChange={(e) => setBondInput(e.target.value)}
-               onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleAddBond();
-              }
-            }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleAddBond();
+                }
+              }}
               className="border-2 border-gray-400"
             />
             <Button
@@ -425,10 +425,10 @@ export default function CardDetails({ cardId }: Props) {
                       editForm.status === "hold"
                         ? "text-green-700"
                         : editForm.status === "win"
-                        ? "text-yellow-500"
-                        : editForm.status === "sell"
-                        ? "text-red-500"
-                        : ""
+                          ? "text-yellow-500"
+                          : editForm.status === "sell"
+                            ? "text-red-500"
+                            : ""
                     }`}
                   >
                     <SelectValue placeholder="Select status" />
