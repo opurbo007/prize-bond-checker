@@ -191,7 +191,7 @@ export default function BondCard({
       }, "image/jpeg");
     };
 
-    const interval = window.setInterval(scanFrame, 3000);
+    const interval = window.setInterval(scanFrame, 1000);
     return () => clearInterval(interval);
   }, [previewNumbers, scanning]);
 
