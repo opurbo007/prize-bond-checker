@@ -419,50 +419,56 @@ export default function BondCard({
 
             {/* Editable numbers */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {[...previewNumbers].reverse().map((numObj, i) => {
-                const { value } = numObj;
-                const numbers = previewNumbers.map((p) => p.value);
-                const analysis = analyzeBanglaPrizeBonds(numbers);
+              {previewNumbers
+                .map((numObj, index) => ({ ...numObj, index }))
+                .reverse()
+                .map((numObj, i) => {
+                  const { value } = numObj;
+                  const numbers = previewNumbers.map((p) => p.value);
+                  const analysis = analyzeBanglaPrizeBonds(numbers);
 
-                const isInvalid = analysis.invalid.includes(value);
-                const isDuplicate = analysis.duplicates.has(value);
-                const isSuspicious = /[19]/.test(value);
+                  const isInvalid = analysis.invalid.includes(value);
+                  const isDuplicate = analysis.duplicates.has(value);
+                  const isSuspicious = /[19]/.test(value);
 
-                const handleChange = (newVal: string) => {
-                  setPreviewNumbers((prev) =>
-                    prev.map((p, idx) => (idx === i ? { value: newVal } : p)),
-                  );
-                };
+                  const handleChange = (newVal: string) => {
+                    setPreviewNumbers((prev) =>
+                      prev.map((p, idx) =>
+                        idx === numObj.index ? { value: newVal } : p,
+                      ),
+                    );
+                  };
 
-                const handleRemove = () => {
-                  setPreviewNumbers((prev) =>
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    prev.filter((_num, idx) => idx !== i),
-                  );
-                };
+                  const handleRemove = () => {
+                    setPreviewNumbers(
+                      (
+                        prev, // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                      ) => prev.filter((_, idx) => idx !== numObj.index),
+                    );
+                  };
 
-                return (
-                  <div key={i} className="flex items-center gap-2">
-                    <Input
-                      value={value}
-                      onChange={(e) => handleChange(e.target.value)}
-                      className={`px-2 py-1 rounded border flex-1
+                  return (
+                    <div key={i} className="flex items-center gap-2">
+                      <Input
+                        value={value}
+                        onChange={(e) => handleChange(e.target.value)}
+                        className={`px-2 py-1 rounded border flex-1
               ${isInvalid ? "bg-red-100 text-red-700 border-red-300" : ""}
               ${isDuplicate ? "bg-yellow-100 text-yellow-700 border-yellow-300" : ""}
               ${isSuspicious && !isInvalid && !isDuplicate ? "bg-orange-100 text-orange-700 border-orange-300" : ""}
               ${!isInvalid && !isDuplicate && !isSuspicious ? "bg-green-50 text-green-700 border-green-200" : ""}
             `}
-                    />
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={handleRemove}
-                    >
-                      x
-                    </Button>
-                  </div>
-                );
-              })}
+                      />
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={handleRemove}
+                      >
+                        x
+                      </Button>
+                    </div>
+                  );
+                })}
             </div>
           </div>
           <DialogFooter>
