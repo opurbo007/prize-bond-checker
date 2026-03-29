@@ -62,6 +62,7 @@ export default function BondCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [ocrBuffer, setOcrBuffer] = useState<Record<string, number>>({});
 
   // Convert Bangla digits to English
   const convert = (text: string) => {
@@ -146,9 +147,7 @@ export default function BondCard({
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       setStream(null);
-      if (videoRef.current) {
-        videoRef.current.srcObject = null;
-      }
+      setOcrBuffer({});
     }
   };
   // Continuous scanning
@@ -165,6 +164,7 @@ export default function BondCard({
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      ctx.filter = "contrast(200%) brightness(150%) grayscale(100%)";
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(async (blob) => {
@@ -177,15 +177,25 @@ export default function BondCard({
           const result = await Tesseract.recognize(blob, "ben+eng");
           const numbers = extractNumbers(result.data.text);
 
-          // Only show new numbers in preview
-          const newNumbers = numbers
-            .filter((n) => !previewNumbers.some((p) => p.value === n))
-            .map((n) => ({ value: n }));
+          setOcrBuffer((prev) => {
+            const updated = { ...prev };
 
-          if (newNumbers.length > 0) {
-            setPreviewNumbers((prev) => [...prev, ...newNumbers]);
-            setIsPreviewOpen(true);
-          }
+            numbers.forEach((num) => {
+              updated[num] = (updated[num] || 0) + 1;
+            });
+
+            return updated;
+          });
+
+          // // Only show new numbers in preview
+          // const newNumbers = numbers
+          //   .filter((n) => !previewNumbers.some((p) => p.value === n))
+          //   .map((n) => ({ value: n }));
+
+          // if (newNumbers.length > 0) {
+          //   setPreviewNumbers((prev) => [...prev, ...newNumbers]);
+          //   setIsPreviewOpen(true);
+          // }
         } catch (err) {
           console.error(err);
         } finally {
@@ -203,6 +213,21 @@ export default function BondCard({
       setScanning(false);
     }
   }, [stream]);
+
+  useEffect(() => {
+    const stableNumbers = Object.entries(ocrBuffer)
+      .filter(([_, count]) => count >= 3)
+      .map(([num]) => num);
+
+    const newNumbers = stableNumbers
+      .filter((n) => !previewNumbers.some((p) => p.value === n))
+      .map((n) => ({ value: n }));
+
+    if (newNumbers.length > 0) {
+      setPreviewNumbers((prev) => [...prev, ...newNumbers]);
+      setIsPreviewOpen(true);
+    }
+  }, [ocrBuffer]);
 
   return (
     <div className="relative bg-white rounded-xl border-4 border-black/60 p-6 flex flex-col shadow-2xl mx-auto transition-all duration-300 hover:shadow-[0_20px_30px_rgba(0,0,0,0.3)] hover:-translate-y-2 hover:scale-[1.03] will-change-transform">
@@ -393,7 +418,7 @@ export default function BondCard({
 
             {/* Editable numbers */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {previewNumbers.reverse().map((numObj, i) => {
+              {[...previewNumbers].reverse().map((numObj, i) => {
                 const { value } = numObj;
                 const numbers = previewNumbers.map((p) => p.value);
                 const analysis = analyzeBanglaPrizeBonds(numbers);
