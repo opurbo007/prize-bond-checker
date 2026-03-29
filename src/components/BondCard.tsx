@@ -153,8 +153,6 @@ export default function BondCard({
   };
   // Continuous scanning
   useEffect(() => {
-    let interval: number;
-
     const scanFrame = async () => {
       if (scanning) return;
       if (!videoRef.current || !videoRef.current.srcObject) return;
@@ -193,7 +191,7 @@ export default function BondCard({
       }, "image/jpeg");
     };
 
-    interval = window.setInterval(scanFrame, 1500);
+    const interval = window.setInterval(scanFrame, 1500);
     return () => clearInterval(interval);
   }, [previewNumbers, scanning]);
 
