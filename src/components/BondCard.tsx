@@ -393,7 +393,7 @@ export default function BondCard({
 
             {/* Editable numbers */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-              {previewNumbers.map((numObj, i) => {
+              {previewNumbers.reverse().map((numObj, i) => {
                 const { value } = numObj;
                 const numbers = previewNumbers.map((p) => p.value);
                 const analysis = analyzeBanglaPrizeBonds(numbers);
