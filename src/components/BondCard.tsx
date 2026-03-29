@@ -408,6 +408,7 @@ export default function BondCard({
               Cancel
             </Button>
             <Button
+              disabled={loading}
               onClick={async () => {
                 const { valid } = analyzeBanglaPrizeBonds(previewNumbers);
                 if (valid.length === 0) return;
