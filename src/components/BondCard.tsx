@@ -334,10 +334,10 @@ export default function BondCard({
                 className="absolute border-2 border-green-400 rounded"
                 style={{
                   left: "20%",
-                  top: "40%",
+                  top: "45%",
                   width: "60%",
-                  height: "40%",
-                  boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)",
+                  height: "30%",
+                  boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)", // punches hole in overlay
                 }}
               >
                 {/* Corner marks */}
