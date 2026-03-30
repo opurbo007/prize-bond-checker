@@ -154,8 +154,8 @@ export default function BondCard({
 
   useEffect(() => {
     Tesseract.createWorker("ben", 1, { logger: () => {} }).then(async (w) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await w.setParameters({
-        // @typescript-eslint/no-explicit-any
         tessedit_pageseg_mode: "11" as any,
       });
       workerRef.current = w;
