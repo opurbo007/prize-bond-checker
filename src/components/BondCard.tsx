@@ -56,12 +56,9 @@ export default function BondCard({
   const [editName, setEditName] = useState(name);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [previewNumbers, setPreviewNumbers] = useState<{ value: string }[]>([]);
-  const [workerReady, setWorkerReady] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const workerRef = useRef<Tesseract.Worker | null>(null);
-
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -154,35 +151,12 @@ export default function BondCard({
     }
   };
 
-  useEffect(() => {
-    const initWorker = async () => {
-      const worker = await Tesseract.createWorker("eng");
-
-      await worker.setParameters({
-        tessedit_char_whitelist: "0123456789",
-      });
-
-      workerRef.current = worker;
-      setWorkerReady(true);
-    };
-
-    initWorker();
-
-    return () => {
-      workerRef.current?.terminate();
-    };
-  }, []);
-
   const scanFrame = async () => {
-    if (scanning || !stream || !workerReady) return;
+    if (scanning) return;
     if (!videoRef.current || !videoRef.current.srcObject) return;
     setScanning(true);
 
     const video = videoRef.current!;
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      setScanning(false);
-      return;
-    }
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -199,49 +173,40 @@ export default function BondCard({
     canvas.width = cropW;
     canvas.height = cropH;
 
-    ctx.filter = "grayscale(1) contrast(2) brightness(1.2)";
     ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
 
-    canvas.toBlob((blob) => {
+    canvas.toBlob(async (blob) => {
       if (!blob) {
         setScanning(false);
         return;
       }
 
-      (async () => {
-        try {
-          const worker = workerRef.current;
-          if (!worker) {
-            setScanning(false);
-            return;
-          }
+      try {
+        const result = await Tesseract.recognize(blob, "ben+eng");
+        const numbers = extractNumbers(result.data.text);
 
-          const result = await worker.recognize(blob);
+        setOcrBuffer((prev) => {
+          const updated = { ...prev };
 
-          if (result.data.confidence < 60) return;
-
-          const numbers = extractNumbers(result.data.text);
-
-          setOcrBuffer((prev) => {
-            const updated = { ...prev };
-            numbers.forEach((num) => {
-              updated[num] = (updated[num] || 0) + 1;
-            });
-            return updated;
+          numbers.forEach((num) => {
+            updated[num] = (updated[num] || 0) + 1;
           });
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setScanning(false);
-        }
-      })();
+
+          return updated;
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setScanning(false);
+      }
     }, "image/jpeg");
   };
+
   // Continuous scanning
   useEffect(() => {
     const interval = window.setInterval(scanFrame, 2000);
     return () => clearInterval(interval);
-  }, [stream, workerReady]);
+  }, [previewNumbers, scanning]);
 
   useEffect(() => {
     if (!stream) {
@@ -252,7 +217,7 @@ export default function BondCard({
   useEffect(() => {
     const stableNumbers = Object.entries(ocrBuffer)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .filter(([_num, count]) => count >= 3)
+      .filter(([_num, count]) => count >= 2)
       .map(([num]) => num);
 
     const newNumbers = stableNumbers
