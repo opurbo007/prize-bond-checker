@@ -56,9 +56,12 @@ export default function BondCard({
   const [editName, setEditName] = useState(name);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [previewNumbers, setPreviewNumbers] = useState<{ value: string }[]>([]);
+  const [workerReady, setWorkerReady] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const workerRef = useRef<Tesseract.Worker | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -151,8 +154,6 @@ export default function BondCard({
     }
   };
 
-  const workerRef = useRef<Tesseract.Worker | null>(null);
-
   useEffect(() => {
     const initWorker = async () => {
       const worker = await Tesseract.createWorker("eng");
@@ -162,6 +163,7 @@ export default function BondCard({
       });
 
       workerRef.current = worker;
+      setWorkerReady(true);
     };
 
     initWorker();
@@ -172,11 +174,15 @@ export default function BondCard({
   }, []);
 
   const scanFrame = async () => {
-    if (scanning || !stream) return;
+    if (scanning || !stream || !workerReady) return;
     if (!videoRef.current || !videoRef.current.srcObject) return;
     setScanning(true);
 
     const video = videoRef.current!;
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      setScanning(false);
+      return;
+    }
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -187,8 +193,8 @@ export default function BondCard({
     const cropW = w * 0.6;
     const cropH = h * 0.3;
 
-    const startX = (w - cropW) / 1.5;
-    const startY = (h - cropH) / 1.5;
+    const startX = (w - cropW) / 2;
+    const startY = (h - cropH) / 2;
 
     canvas.width = cropW;
     canvas.height = cropH;
@@ -196,44 +202,46 @@ export default function BondCard({
     ctx.filter = "grayscale(1) contrast(2) brightness(1.2)";
     ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
 
-    canvas.toBlob(async (blob) => {
+    canvas.toBlob((blob) => {
       if (!blob) {
         setScanning(false);
         return;
       }
 
-      try {
-        const worker = workerRef.current;
-        if (!worker) return;
+      (async () => {
+        try {
+          const worker = workerRef.current;
+          if (!worker) {
+            setScanning(false);
+            return;
+          }
 
-        const result = await worker.recognize(blob);
-        if (result.data.confidence < 60) {
-          setScanning(false);
-          return;
-        }
-        const numbers = extractNumbers(result.data.text);
+          const result = await worker.recognize(blob);
 
-        setOcrBuffer((prev) => {
-          const updated = { ...prev };
+          if (result.data.confidence < 60) return;
 
-          numbers.forEach((num) => {
-            updated[num] = (updated[num] || 0) + 1;
+          const numbers = extractNumbers(result.data.text);
+
+          setOcrBuffer((prev) => {
+            const updated = { ...prev };
+            numbers.forEach((num) => {
+              updated[num] = (updated[num] || 0) + 1;
+            });
+            return updated;
           });
-
-          return updated;
-        });
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setScanning(false);
-      }
+        } catch (err) {
+          console.error(err);
+        } finally {
+          setScanning(false);
+        }
+      })();
     }, "image/jpeg");
   };
   // Continuous scanning
   useEffect(() => {
     const interval = window.setInterval(scanFrame, 2000);
     return () => clearInterval(interval);
-  }, [previewNumbers, scanning]);
+  }, [stream, workerReady]);
 
   useEffect(() => {
     if (!stream) {
