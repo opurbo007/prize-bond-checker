@@ -150,60 +150,88 @@ export default function BondCard({
       setOcrBuffer({});
     }
   };
-  // Continuous scanning
+
+  const workerRef = useRef<Tesseract.Worker | null>(null);
+
   useEffect(() => {
-    const scanFrame = async () => {
-      if (scanning) return;
-      if (!videoRef.current || !videoRef.current.srcObject) return;
-      setScanning(true);
+    const initWorker = async () => {
+      const worker = await Tesseract.createWorker("eng");
 
-      const video = videoRef.current!;
-      const canvas = canvasRef.current!;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+      await worker.setParameters({
+        tessedit_char_whitelist: "0123456789",
+      });
 
-      const w = video.videoWidth;
-      const h = video.videoHeight;
+      workerRef.current = worker;
+    };
 
-      const cropW = w * 0.6;
-      const cropH = h * 0.3;
+    initWorker();
 
-      const startX = (w - cropW) / 2;
-      const startY = (h - cropH) / 2;
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
 
-      canvas.width = cropW;
-      canvas.height = cropH;
+  const scanFrame = async () => {
+    if (scanning || !stream) return;
+    if (!videoRef.current || !videoRef.current.srcObject) return;
+    setScanning(true);
 
-      ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
+    const video = videoRef.current!;
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
+    const w = video.videoWidth;
+    const h = video.videoHeight;
+
+    const cropW = w * 0.6;
+    const cropH = h * 0.3;
+
+    const startX = (w - cropW) / 1.5;
+    const startY = (h - cropH) / 1.5;
+
+    canvas.width = cropW;
+    canvas.height = cropH;
+
+    ctx.filter = "grayscale(1) contrast(2) brightness(1.2)";
+    ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        setScanning(false);
+        return;
+      }
+
+      try {
+        const worker = workerRef.current;
+        if (!worker) return;
+
+        const result = await worker.recognize(blob);
+        if (result.data.confidence < 60) {
           setScanning(false);
           return;
         }
+        const numbers = extractNumbers(result.data.text);
 
-        try {
-          const result = await Tesseract.recognize(blob, "ben+eng");
-          const numbers = extractNumbers(result.data.text);
+        setOcrBuffer((prev) => {
+          const updated = { ...prev };
 
-          setOcrBuffer((prev) => {
-            const updated = { ...prev };
-
-            numbers.forEach((num) => {
-              updated[num] = (updated[num] || 0) + 1;
-            });
-
-            return updated;
+          numbers.forEach((num) => {
+            updated[num] = (updated[num] || 0) + 1;
           });
-        } catch (err) {
-          console.error(err);
-        } finally {
-          setScanning(false);
-        }
-      }, "image/jpeg");
-    };
 
-    const interval = window.setInterval(scanFrame, 1000);
+          return updated;
+        });
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setScanning(false);
+      }
+    }, "image/jpeg");
+  };
+  // Continuous scanning
+  useEffect(() => {
+    const interval = window.setInterval(scanFrame, 2000);
     return () => clearInterval(interval);
   }, [previewNumbers, scanning]);
 
@@ -216,7 +244,7 @@ export default function BondCard({
   useEffect(() => {
     const stableNumbers = Object.entries(ocrBuffer)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .filter(([_num, count]) => count >= 1)
+      .filter(([_num, count]) => count >= 3)
       .map(([num]) => num);
 
     const newNumbers = stableNumbers
