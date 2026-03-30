@@ -150,6 +150,17 @@ export default function BondCard({
       setOcrBuffer({});
     }
   };
+  const workerRef = useRef<Tesseract.Worker | null>(null);
+
+  useEffect(() => {
+    Tesseract.createWorker("ben", 1, { logger: () => {} }).then(async (w) => {
+      await w.setParameters({ tessedit_pageseg_mode: "11" as any });
+      workerRef.current = w;
+    });
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
 
   const scanFrame = async () => {
     if (scanning) return;
@@ -170,10 +181,19 @@ export default function BondCard({
     const startX = (w - cropW) / 2;
     const startY = (h - cropH) / 2;
 
-    canvas.width = cropW;
-    canvas.height = cropH;
-
-    ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
+    canvas.width = cropW * 2;
+    canvas.height = cropH * 2;
+    ctx.drawImage(
+      video,
+      startX,
+      startY,
+      cropW,
+      cropH,
+      0,
+      0,
+      cropW * 2,
+      cropH * 2,
+    );
 
     canvas.toBlob(async (blob) => {
       if (!blob) {
@@ -182,7 +202,8 @@ export default function BondCard({
       }
 
       try {
-        const result = await Tesseract.recognize(blob, "ben+eng");
+        if (!workerRef.current) return;
+        const result = await workerRef.current.recognize(canvas);
         const numbers = extractNumbers(result.data.text);
 
         setOcrBuffer((prev) => {
@@ -204,9 +225,10 @@ export default function BondCard({
 
   // Continuous scanning
   useEffect(() => {
-    const interval = window.setInterval(scanFrame, 2000);
+    if (!stream) return;
+    const interval = window.setInterval(scanFrame, 1000);
     return () => clearInterval(interval);
-  }, [previewNumbers, scanning]);
+  }, [stream]);
 
   useEffect(() => {
     if (!stream) {
@@ -217,7 +239,7 @@ export default function BondCard({
   useEffect(() => {
     const stableNumbers = Object.entries(ocrBuffer)
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .filter(([_num, count]) => count >= 2)
+      .filter(([_num, count]) => count >= 1)
       .map(([num]) => num);
 
     const newNumbers = stableNumbers
@@ -302,13 +324,41 @@ export default function BondCard({
       </div>
 
       {/* Camera */}
+      {/* Camera */}
       <div className="mt-4 flex flex-col gap-2">
-        <video
-          ref={videoRef}
-          className={`border rounded w-full max-h-60 ${!stream ? "hidden" : ""}`}
-          autoPlay
-          muted
-        />
+        <div className="relative">
+          <video
+            ref={videoRef}
+            className={`border rounded w-full max-h-60 ${!stream ? "hidden" : ""}`}
+            autoPlay
+            muted
+          />
+          {stream && (
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Dark overlay with hole in the middle */}
+              <div className="absolute inset-0 bg-black/40" />
+              <div
+                className="absolute border-2 border-green-400 rounded"
+                style={{
+                  left: "20%",
+                  top: "35%",
+                  width: "60%",
+                  height: "30%",
+                  boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)", // punches hole in overlay
+                }}
+              >
+                {/* Corner marks */}
+                <span className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-green-400" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-green-400" />
+                <span className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-green-400" />
+                <span className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-green-400" />
+                <p className="absolute -bottom-6 w-full text-center text-green-400 text-xs">
+                  Align bond number here
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
         <canvas ref={canvasRef} className="hidden" />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2">
