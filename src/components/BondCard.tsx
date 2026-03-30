@@ -184,8 +184,8 @@ export default function BondCard({
     const startX = (w - cropW) / 2;
     const startY = (h - cropH) / 2;
 
-    canvas.width = cropW * 2;
-    canvas.height = cropH * 2;
+    canvas.width = cropW ;
+    canvas.height = cropH;
     ctx.drawImage(
       video,
       startX,
@@ -194,8 +194,8 @@ export default function BondCard({
       cropH,
       0,
       0,
-      cropW * 2,
-      cropH * 2,
+      cropW,
+      cropH,
     );
 
     canvas.toBlob(async (blob) => {
