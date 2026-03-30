@@ -184,19 +184,9 @@ export default function BondCard({
     const startX = (w - cropW) / 2;
     const startY = (h - cropH) / 2;
 
-    canvas.width = cropW ;
+    canvas.width = cropW;
     canvas.height = cropH;
-    ctx.drawImage(
-      video,
-      startX,
-      startY,
-      cropW,
-      cropH,
-      0,
-      0,
-      cropW,
-      cropH,
-    );
+    ctx.drawImage(video, startX, startY, cropW, cropH, 0, 0, cropW, cropH);
 
     canvas.toBlob(async (blob) => {
       if (!blob) {
@@ -344,10 +334,10 @@ export default function BondCard({
                 className="absolute border-2 border-green-400 rounded"
                 style={{
                   left: "20%",
-                  top: "35%",
+                  top: "40%",
                   width: "60%",
-                  height: "30%",
-                  boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)", // punches hole in overlay
+                  height: "40%",
+                  boxShadow: "0 0 0 9999px rgba(0,0,0,0.4)",
                 }}
               >
                 {/* Corner marks */}
