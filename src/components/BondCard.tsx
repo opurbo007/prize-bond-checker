@@ -154,7 +154,10 @@ export default function BondCard({
 
   useEffect(() => {
     Tesseract.createWorker("ben", 1, { logger: () => {} }).then(async (w) => {
-      await w.setParameters({ tessedit_pageseg_mode: "11" as any });
+      await w.setParameters({
+        // @typescript-eslint/no-explicit-any
+        tessedit_pageseg_mode: "11" as any,
+      });
       workerRef.current = w;
     });
     return () => {
