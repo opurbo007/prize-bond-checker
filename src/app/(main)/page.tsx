@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { PlusCircle, X } from "lucide-react";
+import { Download, PlusCircle, X } from "lucide-react";
 import BondCard from "@/components/BondCard";
+import { downloadBondNumbersExcel } from "@/lib/exportBondsToExcel";
 
 import {
   Dialog,
@@ -205,6 +206,21 @@ export default function HomePage() {
     setSearchResults(results);
     setHasSearched(true);
   };
+
+  const handleDownloadBondNumbers = () => {
+    const numbers = cards.flatMap((card) =>
+      card.prizeBonds.map((bond) => bond.number.trim()),
+    );
+
+    if (numbers.length === 0) {
+      toast.error("No bond numbers found to download.");
+      return;
+    }
+
+    downloadBondNumbersExcel(numbers);
+    toast.success("Bond numbers downloaded.");
+  };
+
   useEffect(() => {
     if (search.trim() === "") {
       setHasSearched(false);
@@ -220,42 +236,53 @@ export default function HomePage() {
     <>
       {hasCards && (
         <div className="flex flex-col-reverse sm:flex-row gap-5 justify-between items-center py-5 sm:py-20 px-5">
-          {/* add card  */}
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild className="">
-              <Button variant="outline" className="flex items-center gap-2">
-                <PlusCircle className="w-5 h-5" />
-                Add More Card
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-3">
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild className="">
+                <Button variant="outline" className="flex items-center gap-2">
+                  <PlusCircle className="w-5 h-5" />
+                  Add More Card
+                </Button>
+              </DialogTrigger>
 
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Create New Card</DialogTitle>
-                <DialogClose />
-              </DialogHeader>
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Create New Card</DialogTitle>
+                  <DialogClose />
+                </DialogHeader>
 
-              <Input
-                type="text"
-                placeholder="Enter card name"
-                value={cardName}
-                onChange={(e) => setCardName(e.target.value)}
-                className="mb-4"
-              />
+                <Input
+                  type="text"
+                  placeholder="Enter card name"
+                  value={cardName}
+                  onChange={(e) => setCardName(e.target.value)}
+                  className="mb-4"
+                />
 
-              <div className="flex justify-end gap-2">
-                <DialogClose asChild>
-                  <Button variant="secondary">Cancel</Button>
-                </DialogClose>
+                <div className="flex justify-end gap-2">
+                  <DialogClose asChild>
+                    <Button variant="secondary">Cancel</Button>
+                  </DialogClose>
 
-                <DialogClose asChild>
-                  <Button onClick={() => handleCreate(() => setCardName(""))}>
-                    Create
-                  </Button>
-                </DialogClose>
-              </div>
-            </DialogContent>
-          </Dialog>
+                  <DialogClose asChild>
+                    <Button onClick={() => handleCreate(() => setCardName(""))}>
+                      Create
+                    </Button>
+                  </DialogClose>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDownloadBondNumbers}
+              className="h-8 px-3 text-xs"
+            >
+              <Download className="w-4 h-4" />
+              Download Bonds
+            </Button>
+          </div>
           {/* search  */}
           <div className="w-full max-w-xl">
             <div className="flex gap-3 items-center">
